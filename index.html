@@ -1,0 +1,2884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Toobles — Learn your tables</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Fredoka', 'system-ui', 'sans-serif'] },
+          colors: {
+            toobles: {
+              purple: '#7c3aed',
+              lilac: '#ede9fe',
+              mint: '#34d399',
+              peach: '#fb923c',
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    html {
+      height: 100%;
+      min-height: 100vh;
+      min-height: 100dvh;
+      min-height: 100svh;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    html::-webkit-scrollbar {
+      width: 0;
+      height: 0;
+      background: transparent;
+    }
+    body {
+      min-height: 100vh;
+      min-height: 100dvh;
+      min-height: 100svh;
+      font-family: Fredoka, system-ui, sans-serif;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    body::-webkit-scrollbar {
+      width: 0;
+      height: 0;
+      background: transparent;
+    }
+    button { -webkit-tap-highlight-color: transparent; cursor: pointer; touch-action: manipulation; }
+    .tap:active { transform: scale(0.97); }
+    .view { display: none !important; }
+    .view.active {
+      display: flex !important;
+      flex-direction: column;
+      flex: 1 1 0%;
+      min-height: 0;
+    }
+    /** Locked badges: whole tile (purple shell + art); cumulative fade → low opacity */
+    .badge-btn-unearned {
+      background: linear-gradient(145deg, rgba(237, 233, 254, 0.95), rgba(196, 181, 253, 0.55));
+      box-shadow: inset 0 0 0 1px rgba(139, 92, 246, 0.2), inset 0 0 18px rgba(91, 33, 182, 0.18);
+      opacity: 0.125;
+    }
+    .badge-img-unearned {
+      opacity: 1;
+      filter: grayscale(0.92) brightness(1.08) sepia(0.22) hue-rotate(225deg) saturate(1.6);
+    }
+    @keyframes pulse-soft {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.85; }
+    }
+    .animate-hint { animation: pulse-soft 1.5s ease-in-out infinite; }
+    .nav-ico svg { display: block; }
+    .tile-ico svg { display: block; }
+    select.range-select {
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      background-image: none;
+    }
+    /**
+     * One card height everywhere; 30% shorter than full viewport (0.7×) to test fit.
+     * vh / svh = stable mobile viewport
+     */
+    #appCard.app-card-height {
+      height: calc(0.7 * (100vh - 1.25rem));
+      max-height: calc(0.7 * (100vh - 1.25rem));
+    }
+    @supports (height: 100svh) {
+      #appCard.app-card-height {
+        height: calc(0.7 * (100svh - 1.25rem));
+        max-height: calc(0.7 * (100svh - 1.25rem));
+      }
+    }
+    /** Center app in the viewport; progressive min-height for mobile / desktop */
+    #appShellOuter {
+      min-height: 100vh;
+      min-height: 100dvh;
+      min-height: 100svh;
+    }
+    /** Scrollable panels + shell: no visible scrollbars (touch/wheel scroll still works) */
+    #appCard,
+    #appShellOuter,
+    main,
+    main section.view {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    #appCard::-webkit-scrollbar,
+    #appShellOuter::-webkit-scrollbar,
+    main::-webkit-scrollbar,
+    main section.view::-webkit-scrollbar {
+      width: 0 !important;
+      height: 0 !important;
+      display: none !important;
+      background: transparent !important;
+    }
+    /* Corner + thumb: WebKit can still paint a “nub” when overflow-y is auto */
+    #appCard::-webkit-scrollbar-thumb,
+    #appShellOuter::-webkit-scrollbar-thumb,
+    main::-webkit-scrollbar-thumb,
+    main section.view::-webkit-scrollbar-thumb,
+    #appCard::-webkit-scrollbar-track,
+    #appShellOuter::-webkit-scrollbar-track,
+    main::-webkit-scrollbar-track,
+    main section.view::-webkit-scrollbar-track,
+    #appCard::-webkit-scrollbar-corner,
+    #appShellOuter::-webkit-scrollbar-corner,
+    main::-webkit-scrollbar-corner,
+    main section.view::-webkit-scrollbar-corner {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+      background: transparent !important;
+    }
+    /** Practice / test run: no scroll area → no WebKit overlay scrollbar “nub” */
+    #view-practice-run,
+    #view-test-run {
+      overflow: hidden;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    #view-practice-run::-webkit-scrollbar,
+    #view-practice-run::-webkit-scrollbar-thumb,
+    #view-practice-run::-webkit-scrollbar-track,
+    #view-practice-run::-webkit-scrollbar-corner,
+    #view-test-run::-webkit-scrollbar,
+    #view-test-run::-webkit-scrollbar-thumb,
+    #view-test-run::-webkit-scrollbar-track,
+    #view-test-run::-webkit-scrollbar-corner {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+      background: transparent !important;
+    }
+    /** Home: scroll only the tiles/badges — keeps name field out of the overflow box (fixes WebKit scrollbar “nub” on blur) */
+    #homeScrollBody {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    #homeScrollBody::-webkit-scrollbar,
+    #homeScrollBody::-webkit-scrollbar-thumb,
+    #homeScrollBody::-webkit-scrollbar-track,
+    #homeScrollBody::-webkit-scrollbar-corner,
+    #homeScrollBody::-webkit-scrollbar-button {
+      width: 0 !important;
+      height: 0 !important;
+      display: none !important;
+      background: transparent !important;
+    }
+    /** Clip: WebKit can still show overlay thumb; negative margin tucks the bar outside this box */
+    #homeScrollClip {
+      overflow: hidden;
+    }
+    /** Badge shelf: tooltips are fixed + body-mounted (see renderBadgeShelf) */
+    .badge-shelf-tooltip {
+      pointer-events: none;
+      transition: opacity 150ms ease-out;
+    }
+    body.badge-ceremony-open {
+      overflow: hidden !important;
+    }
+    @keyframes badge-ceremony-pop {
+      0% {
+        transform: scale(0.2) rotate(-12deg);
+        opacity: 0;
+      }
+      55% {
+        transform: scale(1.1) rotate(3deg);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+      }
+    }
+    @keyframes badge-ceremony-glow {
+      0%,
+      100% {
+        box-shadow: 0 0 24px rgba(251, 191, 36, 0.5), 0 0 64px rgba(167, 139, 250, 0.4);
+      }
+      50% {
+        box-shadow: 0 0 40px rgba(251, 191, 36, 0.75), 0 0 100px rgba(244, 114, 182, 0.5);
+      }
+    }
+    @keyframes badge-ceremony-shine {
+      0% {
+        background-position: 0% 50%;
+      }
+      100% {
+        background-position: 200% 50%;
+      }
+    }
+    .badge-ceremony-card-in {
+      animation: badge-ceremony-pop 0.88s cubic-bezier(0.34, 1.55, 0.48, 1) forwards;
+    }
+    .badge-ceremony-exit {
+      animation: badge-ceremony-pop 0.3s ease-in reverse forwards;
+    }
+    .badge-ceremony-ring {
+      animation: badge-ceremony-glow 2.2s ease-in-out infinite;
+    }
+  </style>
+</head>
+<body class="min-h-0 overflow-x-hidden overflow-y-hidden bg-gradient-to-br from-violet-200/70 via-violet-50 to-amber-50/40 text-violet-950 antialiased">
+  <div id="appShellOuter" class="box-border flex w-full items-center justify-center p-2 sm:p-3">
+    <div id="appCard" class="app-card-height flex min-h-0 w-full max-w-5xl flex-col overflow-hidden rounded-[2rem] bg-white/95 shadow-2xl shadow-violet-400/25 ring-1 ring-violet-200/90 backdrop-blur-sm md:flex-row md:items-stretch">
+    <!-- Sidebar -->
+    <aside class="flex shrink-0 gap-2 border-b border-violet-100 bg-violet-600 p-3 text-white justify-between md:h-full md:min-h-0 md:w-48 md:shrink-0 md:flex-col md:self-stretch md:justify-start md:border-b-0 md:border-r md:p-4">
+      <div>
+        <p class="text-xl font-bold tracking-tight">Toobles</p>
+        <p class="text-xs text-violet-200 mb-4">by Mr C</p>
+        <nav class="flex md:flex-col gap-2">
+          <button type="button" data-nav="home" class="nav-btn flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold bg-white/20 hover:bg-white/30">
+            <span class="nav-ico flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15 shadow-inner ring-1 ring-white/25" aria-hidden="true">
+              <svg class="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            </span>
+            <span>Home</span>
+          </button>
+          <button type="button" data-nav="test-setup" class="nav-btn flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold hover:bg-white/20">
+            <span class="nav-ico flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15 shadow-inner ring-1 ring-white/25" aria-hidden="true">
+              <svg class="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6"/><path d="M9 17h4"/></svg>
+            </span>
+            <span>Test</span>
+          </button>
+          <button type="button" data-nav="practice" class="nav-btn flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold hover:bg-white/20">
+            <span class="nav-ico flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15 shadow-inner ring-1 ring-white/25" aria-hidden="true">
+              <svg class="h-[22px] w-[22px] text-white" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            </span>
+            <span>Practice</span>
+          </button>
+          <div class="flex flex-col gap-1">
+            <button type="button" data-nav="grid" class="nav-btn flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold hover:bg-white/20">
+              <span class="nav-ico flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15 shadow-inner ring-1 ring-white/25" aria-hidden="true">
+                <svg class="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
+              </span>
+              <span>My map</span>
+            </button>
+            <button
+              type="button"
+              id="navGeniusBtn"
+              data-nav="grid-genius"
+              class="nav-btn flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold hover:bg-white/20"
+              title="Turn the whole 1s–12s map green to unlock Genius (13s–20s)"
+            >
+              <span class="nav-ico flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15 shadow-inner ring-1 ring-white/25" aria-hidden="true">
+                <svg class="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9.937 15.5A2 2 0 0 0 8.5 14.563l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.437A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.563 8.5a2 2 0 0 0 1.437.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.563a2 2 0 0 0-1.437.937l-1.582 6.135a.5.5 0 0 1-.963 0z"/>
+                  <path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/>
+                </svg>
+              </span>
+              <span class="flex min-w-0 flex-1 items-center gap-2">
+                <span id="navGeniusBtnLabel" class="truncate leading-tight">Genius 13s–20s</span>
+                <span id="navGeniusBtnLock" class="inline-flex shrink-0 text-violet-200/90" aria-hidden="true">
+                  <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                  </svg>
+                </span>
+              </span>
+            </button>
+          </div>
+        </nav>
+      </div>
+      <p class="hidden md:block text-xs text-violet-200 mt-auto pt-4">Mastering your tables unlocks greater future mathematical ability.</p>
+    </aside>
+
+    <main class="flex min-h-0 w-full flex-1 flex-col overflow-hidden overscroll-contain p-3 md:p-4 lg:p-5">
+      <!-- Home -->
+      <section id="view-home" class="view active flex min-h-0 flex-1 flex-col gap-3 overflow-hidden px-2.5 pb-4 sm:gap-4 sm:px-4 md:px-5 md:pb-5">
+        <div class="shrink-0 rounded-2xl bg-gradient-to-br from-violet-600 to-violet-500 p-3 text-white shadow-lg shadow-violet-300/40 md:rounded-3xl md:p-4">
+          <div class="flex flex-wrap items-start justify-between gap-3 gap-y-2">
+            <div class="min-w-0 flex-1">
+              <p class="text-lg font-bold leading-snug text-white md:text-xl">
+                <span class="text-white">Welcome Back</span>
+                <input
+                  id="playerName"
+                  type="text"
+                  maxlength="24"
+                  placeholder="your name"
+                  name="toobles-display-name"
+                  autocomplete="off"
+                  autocorrect="off"
+                  autocapitalize="words"
+                  spellcheck="false"
+                  data-1p-ignore
+                  data-lpignore="true"
+                  class="ml-1.5 inline-block min-w-[7ch] max-w-[min(14rem,60vw)] border-0 border-b border-transparent bg-transparent px-0.5 font-bold text-white underline decoration-white/35 decoration-2 underline-offset-2 placeholder:font-semibold placeholder:text-violet-200/75 focus:border-none focus:decoration-white/80 focus:outline-none focus:ring-0"
+                />
+              </p>
+              <p class="mt-2 text-sm font-medium leading-snug text-violet-100 md:mt-2.5 md:text-base">
+                Quick check-up, then games for facts you still need.
+              </p>
+            </div>
+            <div class="flex shrink-0 flex-col items-end text-right" aria-live="polite">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-violet-200/90">Points</span>
+              <span id="homeLifetimePoints" class="text-4xl font-black tabular-nums leading-none text-white drop-shadow-sm sm:text-5xl">0</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="homeScrollClip" class="min-h-0 min-w-0 flex-1">
+        <div
+          id="homeScrollBody"
+          class="box-border flex h-full min-h-0 w-full max-w-full flex-col gap-2 overflow-x-hidden overflow-y-auto overscroll-contain pl-0 pr-4 -mr-4 [scrollbar-width:none] sm:gap-3"
+        >
+        <!-- Test/Practice: fixed height 100px -->
+        <div class="grid shrink-0 grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3">
+          <button
+            type="button"
+            id="homeBtnTest"
+            class="tap flex h-[100px] shrink-0 flex-row items-center gap-3 rounded-2xl border border-violet-200/90 bg-gradient-to-b from-white to-violet-50/40 px-3 py-0 text-left shadow-lg shadow-violet-400/30 ring-1 ring-inset ring-white/70 transition hover:border-violet-300/90 hover:shadow-xl hover:shadow-violet-400/40 active:opacity-90 sm:gap-3.5 sm:px-3.5"
+          >
+            <span class="tile-ico inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-violet-600 text-white shadow-inner ring-1 ring-white/25 sm:h-14 sm:w-14" aria-hidden="true">
+              <svg class="h-7 w-7 text-white sm:h-8 sm:w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6"/><path d="M9 17h4"/></svg>
+            </span>
+            <span class="min-w-0 flex-1">
+              <span class="block text-xl font-extrabold leading-none tracking-tight text-violet-950 sm:text-2xl">Test</span>
+              <span class="mt-1.5 block text-[11px] leading-snug text-violet-600 sm:text-xs">Mastering times tables starts here</span>
+            </span>
+          </button>
+          <button
+            type="button"
+            id="homeBtnPractice"
+            class="tap relative flex h-[100px] shrink-0 flex-row items-center gap-3 rounded-2xl border border-violet-200/90 bg-gradient-to-b from-white to-violet-50/40 px-3 py-0 text-left shadow-lg shadow-violet-400/30 ring-1 ring-inset ring-white/70 transition hover:border-violet-300/90 hover:shadow-xl hover:shadow-violet-400/40 active:opacity-90 sm:gap-3.5 sm:px-3.5"
+          >
+            <span class="tile-ico inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-violet-600 text-white shadow-inner ring-1 ring-white/25 sm:h-14 sm:w-14" aria-hidden="true">
+              <svg class="h-7 w-7 text-white sm:h-8 sm:w-8" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            </span>
+            <span class="min-w-0 flex-1 pr-10 sm:pr-11">
+              <span class="block text-xl font-extrabold leading-none tracking-tight text-violet-950 sm:text-2xl">Practice</span>
+              <span class="mt-1.5 block text-[11px] leading-snug text-violet-600 sm:text-xs">Sharpen your skills here</span>
+            </span>
+            <span id="homePackBadge" class="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-full bg-orange-400 px-1.5 py-0.5 text-[10px] font-bold text-white sm:right-2 sm:px-2 sm:text-xs hidden">0</span>
+          </button>
+        </div>
+
+        <div class="grid shrink-0 grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3">
+          <section
+            class="flex flex-row items-stretch gap-3 rounded-2xl border border-violet-400/50 bg-violet-300 p-3 shadow-md shadow-violet-500/25 ring-1 ring-white/35 sm:gap-3.5 sm:p-3.5"
+            aria-labelledby="homeProgressHeading"
+          >
+            <span class="inline-flex h-12 w-12 shrink-0 items-center justify-center self-start rounded-xl bg-violet-600 text-white shadow-inner ring-1 ring-white/25 sm:h-14 sm:w-14" aria-hidden="true">
+              <svg class="h-7 w-7 text-white sm:h-8 sm:w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M9 19v-6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2zm0 0V9a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v10m-6 0a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2m0 0V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2z" />
+              </svg>
+            </span>
+            <div class="flex min-h-0 min-w-0 flex-1 flex-col justify-start gap-2">
+              <div>
+                <h2 id="homeProgressHeading" class="text-xl font-extrabold leading-none tracking-tight text-violet-950 sm:text-2xl">Progress</h2>
+                <p class="mt-1 text-[11px] font-semibold leading-snug text-violet-950/75 sm:text-xs"></p>
+              </div>
+              <div class="grid grid-cols-2 gap-2 sm:gap-3">
+                <div class="rounded-xl bg-violet-950/35 px-2 py-2 text-center shadow-inner shadow-violet-950/40 ring-1 ring-white/25 sm:py-2.5">
+                  <div class="text-[10px] font-bold uppercase tracking-wide text-white [text-shadow:0_1px_3px_rgba(46,16,101,0.65)] sm:text-xs">Mastered</div>
+                  <strong id="homeCountMastered" class="mt-0.5 block text-3xl font-black tabular-nums leading-none text-white [text-shadow:0_2px_6px_rgba(46,16,101,0.55)] sm:text-4xl">0</strong>
+                </div>
+                <div class="rounded-xl bg-violet-950/35 px-2 py-2 text-center shadow-inner shadow-violet-950/40 ring-1 ring-white/25 sm:py-2.5">
+                  <div class="text-[10px] font-bold uppercase tracking-wide text-white [text-shadow:0_1px_3px_rgba(46,16,101,0.65)] sm:text-xs">Remaining</div>
+                  <strong id="homeCountLeft" class="mt-0.5 block text-3xl font-black tabular-nums leading-none text-white [text-shadow:0_2px_6px_rgba(46,16,101,0.55)] sm:text-4xl">144</strong>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section
+            class="flex h-full min-h-0 flex-col gap-2 rounded-2xl border border-violet-400/50 bg-violet-300 p-3 shadow-md shadow-violet-500/25 ring-1 ring-white/35 sm:gap-2.5 sm:p-3.5"
+            aria-labelledby="homeStreakHeading"
+          >
+            <div class="flex flex-row items-start gap-3 sm:gap-3.5">
+              <span class="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-violet-600 text-white shadow-inner ring-1 ring-white/25 sm:h-14 sm:w-14" aria-hidden="true">
+                <svg class="h-7 w-7 text-white sm:h-8 sm:w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
+                  <path d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z" />
+                </svg>
+              </span>
+              <div class="flex min-h-0 min-w-0 flex-1 flex-col gap-2">
+                <div class="flex items-start justify-between gap-2">
+                  <h2 id="homeStreakHeading" class="text-xl font-extrabold leading-none tracking-tight text-violet-950 sm:text-2xl">Streak power</h2>
+                  <div class="shrink-0 text-right leading-none">
+                    <span id="homeStreakDays" class="text-4xl font-black tabular-nums text-white drop-shadow-md sm:text-5xl">0</span>
+                    <span class="mt-1 block text-[10px] font-bold uppercase tracking-wide text-violet-950/90 sm:text-xs">days</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div id="homeStreakFlames" class="flex w-full flex-wrap justify-center gap-1" aria-hidden="true"></div>
+            <p class="mt-auto pt-1 text-center text-xs font-bold text-violet-950/85 sm:text-sm">
+              Weekly streaks
+              <strong id="homeWeeklyStreak" class="ml-1 font-black tabular-nums text-violet-950 text-base sm:text-lg">0</strong>
+            </p>
+          </section>
+        </div>
+
+        <div class="flex min-w-0 shrink-0 flex-col pt-0.5">
+          <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1.5 sm:gap-x-6 sm:gap-y-2">
+            <span class="text-2xl font-bold text-violet-900 md:text-3xl">Your badges</span>
+            <span class="text-xl leading-snug text-violet-600 md:text-1xl">Everyone earns something — keep showing up!</span>
+          </div>
+          <div id="homeBadgesGrid" class="w-full pb-2 sm:pb-3"></div>
+        </div>
+        </div>
+        </div>
+      </section>
+
+      <!-- Test: setup (two big tiles) -->
+      <section id="view-test-setup" class="view min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <h2 class="text-xl font-bold text-violet-900 sm:text-2xl mb-1.5 sm:mb-2">What would you like to test?</h2>
+        <p class="text-violet-600 text-xs sm:text-sm mb-4 sm:mb-5 leading-snug">Choose how you want to run your test — pick a card below.</p>
+
+        <div class="mb-4 grid grid-cols-1 gap-4 sm:mb-6 sm:grid-cols-2 sm:gap-5">
+          <div
+            class="test-scope-card flex min-h-[180px] flex-col gap-4 rounded-3xl border-2 border-violet-200 bg-gradient-to-b from-white to-violet-50/50 p-4 shadow-lg shadow-violet-400/20 sm:min-h-[21.6rem] sm:p-5"
+            data-test-scope="all"
+          >
+            <label class="flex cursor-pointer items-start gap-3">
+              <input type="radio" name="testScope" value="all" class="mt-1 h-5 w-5 shrink-0 text-violet-600" checked />
+              <span class="text-left text-base font-extrabold uppercase leading-snug tracking-wide text-violet-950 sm:text-lg"
+                >Let me choose my facts</span
+              >
+            </label>
+            <div id="testSetupRangeWrap" class="hidden grid max-w-full gap-3 sm:grid-cols-[1fr_auto_1fr] sm:items-end sm:gap-3">
+              <div>
+                <label for="rangeMin" class="mb-2 block text-xs font-bold uppercase tracking-wide text-violet-500">From</label>
+                <div class="relative">
+                  <select id="rangeMin" class="range-select tap w-full cursor-pointer rounded-2xl border-2 border-violet-200/90 bg-gradient-to-b from-violet-50 to-white py-3.5 pl-4 pr-11 text-lg font-bold text-violet-900 shadow-md shadow-violet-200/40 outline-none transition hover:border-violet-300 focus:border-violet-500 focus:ring-2 focus:ring-violet-400/40"></select>
+                  <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-violet-400" aria-hidden="true">
+                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                  </span>
+                </div>
+              </div>
+              <div class="hidden items-center justify-center pb-2 text-violet-300 sm:flex" aria-hidden="true">
+                <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+              </div>
+              <div>
+                <label for="rangeMax" class="mb-2 block text-xs font-bold uppercase tracking-wide text-violet-500">To</label>
+                <div class="relative">
+                  <select id="rangeMax" class="range-select tap w-full cursor-pointer rounded-2xl border-2 border-violet-200/90 bg-gradient-to-b from-violet-50 to-white py-3.5 pl-4 pr-11 text-lg font-bold text-violet-900 shadow-md shadow-violet-200/40 outline-none transition hover:border-violet-300 focus:border-violet-500 focus:ring-2 focus:ring-violet-400/40"></select>
+                  <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-violet-400" aria-hidden="true">
+                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="test-scope-card flex min-h-[180px] flex-col gap-3 rounded-3xl border-2 border-violet-200 bg-gradient-to-b from-white to-violet-50/50 p-4 shadow-lg shadow-violet-400/20 sm:min-h-[21.6rem] sm:p-5"
+            data-test-scope="untested"
+          >
+            <label class="flex cursor-pointer items-start gap-3">
+              <input type="radio" name="testScope" value="untested" class="mt-1 h-5 w-5 shrink-0 text-violet-600" />
+              <span class="text-left text-base font-extrabold uppercase leading-snug tracking-wide text-violet-950 sm:text-lg">Random facts I haven't tried</span>
+            </label>
+            <p class="text-sm leading-relaxed text-violet-600">
+              Only facts you haven’t tried yet — blank cells on your whole <strong>1s–12s</strong> map.
+            </p>
+          </div>
+        </div>
+
+        <fieldset
+          id="testSetupDurationWrap"
+          class="hidden mb-4 rounded-2xl border border-violet-100 bg-gradient-to-r from-violet-50 to-indigo-50/80 px-3 py-3 shadow-inner shadow-violet-100/50 ring-1 ring-violet-100/60 sm:mb-6 sm:px-4 sm:py-4"
+        >
+          <legend class="px-1 text-xs font-bold uppercase tracking-wide text-violet-500">How long?</legend>
+          <div class="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <label class="flex cursor-pointer items-center justify-center rounded-xl bg-white/80 px-2 py-2.5 text-center text-xs font-semibold text-violet-900 ring-1 ring-violet-100 hover:bg-white has-[:checked]:bg-white has-[:checked]:ring-2 has-[:checked]:ring-violet-500 sm:text-sm">
+              <input type="radio" name="testDuration" value="60" class="sr-only" />
+              <span>1 minute</span>
+            </label>
+            <label class="flex cursor-pointer items-center justify-center rounded-xl bg-white/80 px-2 py-2.5 text-center text-xs font-semibold text-violet-900 ring-1 ring-violet-100 hover:bg-white has-[:checked]:bg-white has-[:checked]:ring-2 has-[:checked]:ring-violet-500 sm:text-sm">
+              <input type="radio" name="testDuration" value="120" class="sr-only" />
+              <span>2 minutes</span>
+            </label>
+            <label class="flex cursor-pointer items-center justify-center rounded-xl bg-white/80 px-2 py-2.5 text-center text-xs font-semibold text-violet-900 ring-1 ring-violet-100 hover:bg-white has-[:checked]:bg-white has-[:checked]:ring-2 has-[:checked]:ring-violet-500 sm:text-sm">
+              <input type="radio" name="testDuration" value="300" class="sr-only" />
+              <span>5 minutes</span>
+            </label>
+            <label class="flex cursor-pointer items-center justify-center rounded-xl bg-white/80 px-2 py-2.5 text-center text-xs font-semibold text-violet-900 ring-1 ring-violet-100 hover:bg-white has-[:checked]:bg-white has-[:checked]:ring-2 has-[:checked]:ring-violet-500 sm:text-sm">
+              <input type="radio" name="testDuration" value="0" checked class="sr-only" />
+              <span>Until I’m done</span>
+            </label>
+          </div>
+        </fieldset>
+
+        <p id="testSetupUntestedZero" class="hidden mb-3 text-center text-sm leading-snug text-violet-600 sm:mb-4"></p>
+
+        <button type="button" id="startTestBtn" class="hidden w-full rounded-2xl bg-violet-600 py-3.5 text-base font-bold text-white shadow-lg hover:bg-violet-500 active:bg-violet-700 sm:py-4 sm:text-lg">
+          Start test
+        </button>
+      </section>
+
+      <!-- Test: run — same keypad layout as practice -->
+      <section id="view-test-run" class="view min-h-0 flex-1 flex flex-col overflow-hidden overscroll-contain">
+        <div class="shrink-0 text-center text-sm leading-tight">
+          <p class="font-medium text-violet-500"><span id="testProgressLabel">Question 1 of 144</span></p>
+          <p id="testSessionClock" class="mt-0.5 hidden text-xs font-semibold tabular-nums text-violet-600">—</p>
+        </div>
+
+        <div class="flex min-h-0 flex-1 flex-col justify-center gap-3 px-1 py-2 text-center sm:gap-4 sm:py-3">
+          <div class="flex flex-col items-center">
+            <p id="testQuestion" class="text-4xl font-extrabold leading-none text-violet-900 transition-colors duration-200 sm:text-5xl md:text-6xl"></p>
+            <div
+              id="testAnswerDisplay"
+              class="mt-2 inline-block min-w-[10ch] rounded-2xl border-[3px] border-violet-200 bg-white px-4 py-2.5 text-3xl font-bold text-violet-800 shadow-inner sm:mt-3 sm:px-5 sm:py-3 sm:text-4xl"
+            >
+              —
+            </div>
+          </div>
+          <div class="flex justify-center px-1">
+            <div id="pad-test" class="grid w-full max-w-[17.5rem] grid-cols-3 gap-1.5 sm:max-w-xs sm:gap-2"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Test: results -->
+      <section id="view-test-results" class="view min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <h2 class="text-2xl font-bold text-violet-900 mb-2">Your times-table map</h2>
+        <p class="text-violet-600 text-sm mb-4">This map is saved on your device. <span class="inline-flex items-center gap-1"><span class="inline-block h-3 w-3 rounded bg-emerald-400"></span> green</span> = correct in time, <span class="inline-flex items-center gap-1"><span class="inline-block h-3 w-3 rounded bg-rose-400"></span> red</span> = needs work, plain = not tested yet.</p>
+
+        <div class="mb-8 overflow-x-auto rounded-2xl border border-violet-100 bg-violet-50/50 p-3 shadow-inner">
+          <div id="resultsGridHost" class="min-w-[340px] sm:min-w-[420px] md:min-w-0"></div>
+        </div>
+
+        <h3 class="text-lg font-bold text-violet-900 mb-2">This run</h3>
+        <p class="text-violet-600 text-sm mb-6">Facts you answered wrong or slower than 4 seconds go to <strong>Still learning</strong>. Quick correct answers are <strong>Got it!</strong></p>
+
+        <div class="grid md:grid-cols-2 gap-4 mb-8">
+          <div class="rounded-2xl border-2 border-orange-200 bg-orange-50/80 p-4 shadow-sm">
+            <p class="text-sm font-bold text-orange-800 mb-2">📌 Still learning</p>
+            <ul id="listStill" class="flex flex-wrap gap-2 text-sm font-medium text-orange-900 min-h-[3rem]"></ul>
+            <p id="listStillEmpty" class="text-sm text-orange-700/80 hidden">Nothing here — amazing!</p>
+          </div>
+          <div class="rounded-2xl border-2 border-emerald-200 bg-emerald-50/80 p-4 shadow-sm">
+            <p class="text-sm font-bold text-emerald-800 mb-2">⭐ Got it!</p>
+            <ul id="listGot" class="flex flex-wrap gap-2 text-sm font-medium text-emerald-900 min-h-[3rem]"></ul>
+            <p id="listGotEmpty" class="text-sm text-emerald-700/80 hidden">Keep practicing — you’ll fill this up!</p>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-3">
+          <button type="button" id="resultsPracticeBtn" class="flex-1 rounded-2xl bg-violet-600 py-3 font-bold text-white hover:bg-violet-500">Practice these</button>
+          <button type="button" id="resultsTestAgainBtn" class="flex-1 rounded-2xl border-2 border-violet-300 bg-white py-3 font-bold text-violet-800 hover:bg-violet-50">Test again</button>
+          <button type="button" id="resultsHomeBtn" class="flex-1 rounded-2xl border-2 border-violet-200 py-3 font-bold text-violet-700 hover:bg-violet-50">Home</button>
+        </div>
+      </section>
+
+      <!-- Progress map (anytime) -->
+      <section id="view-grid" class="view overflow-y-auto overscroll-contain">
+        <h2 class="text-2xl font-bold text-violet-900 mb-2">My times-table map</h2>
+        <p class="text-violet-600 text-sm mb-3">Saved on this device. <span class="inline-flex items-center gap-1"><span class="inline-block h-3 w-3 rounded bg-emerald-400"></span> green</span> = correct in time on a test, <span class="inline-flex items-center gap-1"><span class="inline-block h-3 w-3 rounded bg-rose-400"></span> red</span> = needs work, plain = not tested yet.</p>
+        <p id="gridSummaryCounts" class="text-sm font-semibold text-violet-800 mb-3 rounded-xl bg-violet-50 px-4 py-2 ring-1 ring-violet-100"></p>
+
+        <div class="mb-3 flex flex-wrap gap-2" role="tablist" aria-label="Map view">
+          <button
+            type="button"
+            id="gridTabClassicBtn"
+            class="tap rounded-xl border-2 border-violet-500 bg-violet-600 px-3 py-1.5 text-sm font-bold text-white shadow-sm sm:px-4"
+            role="tab"
+            aria-selected="true"
+            aria-controls="gridProgressHost"
+          >
+            1s–12s map
+          </button>
+          <button
+            type="button"
+            id="gridTabGeniusBtn"
+            class="tap rounded-xl border-2 border-violet-200 bg-violet-100/80 px-3 py-1.5 text-sm font-bold text-violet-500 sm:px-4"
+            role="tab"
+            aria-selected="false"
+            title="Turn the whole 1s–12s map green to unlock Genius (13s–20s)"
+          >
+            Genius 13s–20s <span class="ml-0.5" aria-hidden="true">🔒</span>
+          </button>
+        </div>
+
+        <div class="mb-6 overflow-x-auto rounded-2xl border border-violet-100 bg-violet-50/50 p-3 shadow-inner">
+          <div id="gridProgressHost" class="min-w-[340px] sm:min-w-[420px] md:min-w-0" role="tabpanel"></div>
+        </div>
+
+        <button type="button" id="gridHomeBtn" class="w-full rounded-2xl border-2 border-violet-200 py-3 font-bold text-violet-700 hover:bg-violet-50">Home</button>
+      </section>
+
+      <!-- Practice: setup (two big tiles) -->
+      <section id="view-practice-setup" class="view min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <h2 class="text-xl font-bold text-violet-900 sm:text-2xl mb-1.5 sm:mb-2">What would you like to practise?</h2>
+        <p class="text-violet-600 text-xs sm:text-sm mb-4 sm:mb-5 leading-snug">Choose how you want to practise — pick a card below.</p>
+
+        <div class="mb-4 grid grid-cols-1 gap-4 sm:mb-6 sm:grid-cols-2 sm:gap-5">
+          <div
+            class="practice-mode-card flex min-h-[180px] flex-col gap-4 rounded-3xl border-2 border-violet-200 bg-gradient-to-b from-white to-violet-50/50 p-4 shadow-lg shadow-violet-400/20 sm:min-h-[21.6rem] sm:p-5"
+            data-practice-mode="tables"
+          >
+            <label class="flex cursor-pointer items-start gap-3">
+              <input type="radio" name="practiceMode" value="tables" class="mt-1 h-5 w-5 shrink-0 text-violet-600" checked />
+              <span class="text-left text-base font-extrabold uppercase leading-snug tracking-wide text-violet-950 sm:text-lg"
+                >Let me choose my facts</span
+              >
+            </label>
+
+            <div id="practiceRangeRow" class="hidden grid max-w-full gap-3 sm:grid-cols-[1fr_auto_1fr] sm:items-end sm:gap-3">
+              <div>
+                <label for="practiceRangeFrom" class="mb-2 block text-xs font-bold uppercase tracking-wide text-violet-500">From</label>
+                <div class="relative">
+                  <select id="practiceRangeFrom" class="range-select tap w-full cursor-pointer rounded-2xl border-2 border-violet-200/90 bg-gradient-to-b from-violet-50 to-white py-3.5 pl-4 pr-11 text-lg font-bold text-violet-900 shadow-md shadow-violet-200/40 outline-none transition hover:border-violet-300 focus:border-violet-500 focus:ring-2 focus:ring-violet-400/40"></select>
+                  <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-violet-400" aria-hidden="true">
+                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                  </span>
+                </div>
+              </div>
+              <div class="hidden items-center justify-center pb-2 text-violet-300 sm:flex" aria-hidden="true">
+                <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+              </div>
+              <div>
+                <label for="practiceRangeTo" class="mb-2 block text-xs font-bold uppercase tracking-wide text-violet-500">To</label>
+                <div class="relative">
+                  <select id="practiceRangeTo" class="range-select tap w-full cursor-pointer rounded-2xl border-2 border-violet-200/90 bg-gradient-to-b from-violet-50 to-white py-3.5 pl-4 pr-11 text-lg font-bold text-violet-900 shadow-md shadow-violet-200/40 outline-none transition hover:border-violet-300 focus:border-violet-500 focus:ring-2 focus:ring-violet-400/40"></select>
+                  <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-violet-400" aria-hidden="true">
+                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="practice-mode-card flex min-h-[180px] flex-col gap-3 rounded-3xl border-2 border-violet-200 bg-gradient-to-b from-white to-violet-50/50 p-4 shadow-lg shadow-violet-400/20 sm:min-h-[21.6rem] sm:p-5"
+            data-practice-mode="still"
+          >
+            <label class="flex shrink-0 cursor-pointer items-start gap-3">
+              <input type="radio" name="practiceMode" value="still" class="mt-1 h-5 w-5 shrink-0 text-violet-600" />
+              <span class="text-left text-base font-extrabold uppercase leading-snug tracking-wide text-violet-950 sm:text-lg">Practice my tough ones</span>
+            </label>
+            <div class="flex min-h-0 flex-1 flex-col gap-2">
+              <div
+                id="practiceStillHasFacts"
+                class="hidden min-h-[8.1rem] flex-1 flex-col overflow-hidden rounded-2xl border border-violet-100/90 bg-white/90 shadow-inner sm:min-h-[9.9rem]"
+              >
+                <ul
+                  id="practiceStillFactsList"
+                  class="list-none flex max-h-[9.9rem] flex-wrap content-start gap-1.5 overflow-y-auto overscroll-contain p-2.5 sm:max-h-[11.25rem] sm:gap-2 sm:p-3"
+                  role="list"
+                  aria-label="Tough facts to practise"
+                ></ul>
+              </div>
+              <div
+                id="practiceStillNoFacts"
+                class="hidden min-h-[8.1rem] flex flex-1 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-violet-200/80 bg-white/70 p-3 text-center sm:min-h-[9.9rem] sm:gap-3 sm:p-4"
+              >
+                <p class="text-2xl leading-none" aria-hidden="true">🌟</p>
+                <p class="text-sm font-semibold text-violet-900">No tough facts yet</p>
+                <p class="text-xs text-violet-600">Take a test to find them — or choose tables on the left.</p>
+                <div class="mt-1 flex w-full flex-col gap-2 sm:mt-2 sm:flex-row sm:justify-center">
+                  <button type="button" id="practiceEmptyTestBtn" class="rounded-2xl bg-violet-600 px-4 py-2.5 text-sm font-bold text-white sm:px-5 sm:py-3">Go to Test</button>
+                  <button
+                    type="button"
+                    id="practiceEmptyPickTablesBtn"
+                    class="rounded-2xl border-2 border-violet-400 bg-white px-4 py-2.5 text-sm font-bold text-violet-800 sm:px-5 sm:py-3"
+                  >
+                    Choose tables
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <fieldset
+          id="practiceSetupDurationWrap"
+          class="hidden mb-4 rounded-2xl border border-violet-100 bg-gradient-to-r from-violet-50 to-indigo-50/80 px-3 py-3 shadow-inner shadow-violet-100/50 ring-1 ring-violet-100/60 sm:mb-6 sm:px-4 sm:py-4"
+        >
+          <legend class="px-1 text-xs font-bold uppercase tracking-wide text-violet-500">How long?</legend>
+          <div class="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <label class="flex cursor-pointer items-center justify-center rounded-xl bg-white/80 px-2 py-2.5 text-center text-xs font-semibold text-violet-900 ring-1 ring-violet-100 hover:bg-white has-[:checked]:bg-white has-[:checked]:ring-2 has-[:checked]:ring-violet-500 sm:text-sm">
+              <input type="radio" name="practiceDuration" value="60" checked class="sr-only" />
+              <span>1 minute</span>
+            </label>
+            <label class="flex cursor-pointer items-center justify-center rounded-xl bg-white/80 px-2 py-2.5 text-center text-xs font-semibold text-violet-900 ring-1 ring-violet-100 hover:bg-white has-[:checked]:bg-white has-[:checked]:ring-2 has-[:checked]:ring-violet-500 sm:text-sm">
+              <input type="radio" name="practiceDuration" value="120" class="sr-only" />
+              <span>2 minutes</span>
+            </label>
+            <label class="flex cursor-pointer items-center justify-center rounded-xl bg-white/80 px-2 py-2.5 text-center text-xs font-semibold text-violet-900 ring-1 ring-violet-100 hover:bg-white has-[:checked]:bg-white has-[:checked]:ring-2 has-[:checked]:ring-violet-500 sm:text-sm">
+              <input type="radio" name="practiceDuration" value="300" class="sr-only" />
+              <span>5 minutes</span>
+            </label>
+            <label class="flex cursor-pointer items-center justify-center rounded-xl bg-white/80 px-2 py-2.5 text-center text-xs font-semibold text-violet-900 ring-1 ring-violet-100 hover:bg-white has-[:checked]:bg-white has-[:checked]:ring-2 has-[:checked]:ring-violet-500 sm:text-sm">
+              <input type="radio" name="practiceDuration" value="0" class="sr-only" />
+              <span>Until I’m done</span>
+            </label>
+          </div>
+        </fieldset>
+
+        <button type="button" id="startPracticeBtn" class="hidden w-full rounded-2xl bg-violet-600 py-3.5 text-base font-bold text-white shadow-lg hover:bg-violet-500 active:bg-violet-700 sm:py-4 sm:text-lg">
+          Start practice
+        </button>
+      </section>
+
+      <!-- Practice: run — question + keypad grouped (same layout as test) -->
+      <section id="view-practice-run" class="view min-h-0 flex-1 flex flex-col overflow-hidden overscroll-contain">
+        <div class="shrink-0 text-center text-sm leading-tight">
+          <p class="font-medium text-violet-500"><span id="practiceRunProgress">—</span></p>
+          <p class="mt-0.5 text-xs font-semibold tabular-nums text-violet-600">Score <strong id="practiceScore">0</strong></p>
+        </div>
+
+        <div class="mt-2 shrink-0 space-y-2 sm:mt-2.5 sm:space-y-2.5">
+          <div>
+            <label class="text-[10px] font-semibold uppercase tracking-wide text-violet-500 sm:text-xs">Time</label>
+            <div class="mt-0.5 h-1.5 w-full overflow-hidden rounded-full bg-violet-100 sm:h-2">
+              <div id="practiceTimeTank" class="h-full bg-gradient-to-r from-emerald-400 via-amber-300 to-rose-400 transition-all duration-1000 ease-linear" style="width:100%"></div>
+            </div>
+            <p class="mt-0.5 text-[10px] text-violet-500 sm:text-xs"><span id="practiceTimeLeft">60</span>s left</p>
+          </div>
+          <div>
+            <label class="text-[10px] font-semibold uppercase tracking-wide text-violet-500 sm:text-xs">Streak power</label>
+            <div class="mt-0.5 h-1.5 w-full overflow-hidden rounded-full bg-violet-100 sm:h-2">
+              <div id="practiceStreakBar" class="h-full bg-gradient-to-r from-cyan-400 to-emerald-400 transition-all duration-300" style="width:0%"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex min-h-0 flex-1 flex-col justify-center gap-3 px-1 py-1 text-center sm:gap-4 sm:py-2">
+          <div class="flex flex-col items-center">
+            <p id="practiceQuestion" class="text-4xl font-extrabold leading-none text-violet-900 transition-colors duration-200 sm:text-5xl md:text-6xl"></p>
+            <div
+              id="practiceAnswerDisplay"
+              class="mt-2 inline-block min-w-[10ch] rounded-2xl border-[3px] border-violet-200 bg-white px-4 py-2.5 text-3xl font-bold text-violet-800 shadow-inner sm:mt-3 sm:px-5 sm:py-3 sm:text-4xl"
+            >
+              —
+            </div>
+          </div>
+          <div class="flex justify-center px-1">
+            <div id="pad-practice" class="grid w-full max-w-[17.5rem] grid-cols-3 gap-1.5 sm:max-w-xs sm:gap-2"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Practice: complete (parallel to test-results) -->
+      <section id="view-practice-end" class="view min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <h2 class="text-2xl font-bold text-violet-900 mb-2">Your practice round</h2>
+        <p class="text-violet-600 text-sm mb-4">Scores are for fun — keep showing up and your map will grow greener.</p>
+
+        <div class="mb-8 rounded-2xl border border-violet-100 bg-violet-50/50 p-4 text-center shadow-inner sm:p-6">
+          <p id="practiceEndMsg" class="text-lg font-bold text-violet-900"></p>
+        </div>
+
+        <h3 class="text-lg font-bold text-violet-900 mb-2">What next?</h3>
+        <p class="text-violet-600 text-sm mb-6">Jump straight into another round or change what you’re practising — same as after a test.</p>
+
+        <div class="flex flex-col sm:flex-row gap-3">
+          <button type="button" id="practiceReplayBtn" class="flex-1 rounded-2xl bg-violet-600 py-3 font-bold text-white hover:bg-violet-500">Play again</button>
+          <button type="button" id="practiceSetupAgainBtn" class="flex-1 rounded-2xl border-2 border-violet-300 bg-white py-3 font-bold text-violet-800 hover:bg-violet-50">Practice again</button>
+          <button type="button" id="practiceHomeBtn" class="flex-1 rounded-2xl border-2 border-violet-200 py-3 font-bold text-violet-700 hover:bg-violet-50">Home</button>
+        </div>
+      </section>
+    </main>
+    </div>
+  </div>
+
+  <div
+    id="badgeCeremonyRoot"
+    class="fixed inset-0 z-[500] hidden flex items-center justify-center p-4 sm:p-6"
+    aria-hidden="true"
+    role="dialog"
+    aria-labelledby="badgeCeremonyTitle"
+    aria-modal="true"
+  >
+    <div
+      class="absolute inset-0 bg-gradient-to-b from-violet-950/90 via-fuchsia-900/85 to-violet-950/90 backdrop-blur-md"
+      id="badgeCeremonyBackdrop"
+    ></div>
+    <div class="pointer-events-none absolute inset-0 overflow-hidden">
+      <div
+        class="absolute -left-1/4 top-0 h-[55%] w-[150%] opacity-40"
+        style="
+          background: linear-gradient(105deg, transparent 0%, rgba(251, 191, 36, 0.35) 45%, transparent 70%);
+          animation: badge-ceremony-shine 2.8s linear infinite;
+          background-size: 200% 100%;
+        "
+      ></div>
+    </div>
+    <div
+      id="badgeCeremonyCard"
+      class="relative z-10 flex max-h-[min(92vh,36rem)] w-full max-w-md flex-col items-center overflow-y-auto rounded-3xl border-4 border-amber-300/90 bg-gradient-to-b from-white via-violet-50 to-amber-50 px-5 py-7 text-center shadow-[0_0_100px_rgba(251,191,36,0.45)] ring-4 ring-amber-200/50 sm:px-8 sm:py-9"
+    >
+      <p class="mb-1 text-xs font-extrabold uppercase tracking-[0.4em] text-amber-500 sm:text-sm" id="badgeCeremonyKicker">New badge</p>
+      <div class="relative mb-4 mt-1">
+        <div
+          class="badge-ceremony-ring pointer-events-none absolute inset-0 -m-2 rounded-full bg-gradient-to-br from-amber-300/50 via-fuchsia-400/40 to-violet-500/50 blur-lg sm:-m-4"
+        ></div>
+        <div
+          class="relative mx-auto flex h-32 w-32 items-center justify-center rounded-full bg-gradient-to-br from-amber-100 via-white to-fuchsia-100 p-1.5 shadow-inner ring-4 ring-white sm:h-40 sm:w-40"
+        >
+          <img
+            id="badgeCeremonyImg"
+            src=""
+            alt=""
+            class="h-full w-full rounded-full object-cover drop-shadow-xl"
+            width="160"
+            height="160"
+          />
+        </div>
+        <div class="pointer-events-none absolute -right-1 -top-1 text-2xl sm:text-3xl" aria-hidden="true">
+          <span class="inline-block animate-bounce">✨</span>
+        </div>
+        <div class="pointer-events-none absolute -bottom-0.5 -left-1 text-xl sm:text-2xl" aria-hidden="true">
+          <span class="inline-block animate-pulse">⭐</span>
+        </div>
+      </div>
+      <h3 id="badgeCeremonyTitle" class="text-2xl font-extrabold leading-tight text-violet-950 sm:text-3xl"></h3>
+      <p id="badgeCeremonyBlurb" class="mt-2.5 max-w-sm text-sm leading-relaxed text-violet-700 sm:text-base"></p>
+      <button
+        type="button"
+        id="badgeCeremonyDismiss"
+        class="tap pointer-events-auto mt-7 w-full max-w-xs rounded-2xl bg-gradient-to-r from-fuchsia-500 via-violet-600 to-indigo-600 py-4 text-lg font-extrabold text-white shadow-xl shadow-violet-500/50 ring-2 ring-amber-200/80 transition hover:brightness-110 sm:py-3.5"
+      >
+        Let’s go! 🎉
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const LS_NAME = 'tooblesName';
+    const LS_STILL = 'tooblesStillLearning';
+    const LS_GOT = 'tooblesGotIt';
+    const LS_GRID = 'tooblesGrid144';
+    const LS_BADGES = 'tooblesBadgesEarned';
+    const LS_STATS = 'tooblesStats';
+    /** Per fact (canonical factKey): struggle weights for smarter test/practice order */
+    const LS_FACT_STATS = 'tooblesFactStats';
+
+    const $ = (s, el = document) => el.querySelector(s);
+    const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+
+    let playerNameDebounceTimer = null;
+
+    function persistPlayerName() {
+      const el = $('#playerName');
+      if (!el) return;
+      try {
+        localStorage.setItem(LS_NAME, el.value.trim());
+      } catch (e) {
+        /* ignore quota / private mode */
+      }
+    }
+
+    function schedulePersistPlayerName() {
+      if (playerNameDebounceTimer) clearTimeout(playerNameDebounceTimer);
+      playerNameDebounceTimer = setTimeout(() => {
+        playerNameDebounceTimer = null;
+        persistPlayerName();
+      }, 150);
+    }
+
+    function loadPlayerNameIntoField() {
+      const el = $('#playerName');
+      if (!el) return;
+      try {
+        el.value = localStorage.getItem(LS_NAME) || '';
+      } catch (e) {
+        el.value = '';
+      }
+    }
+
+    /** Fixed “fast enough” time — same for everyone */
+    const TEST_FAST_MS = 4000;
+    /** Question turns red at this mark (2s in → 2s left on a 4s limit) */
+    const QUESTION_WARN_MS = 2000;
+    /** Correct answers this fast in one test count toward Speedster */
+    const SPEEDSTER_MS = 2500;
+    /** Step-by-step test / practice setup */
+
+    let stillLearning = new Set();
+    let gotIt = new Set();
+    /** Ordered pair (row × col) → 'ok' | 'bad' — full 12×12 map */
+    let grid144 = {};
+    let earnedBadges = new Set();
+
+    const BADGE_DEFS = [
+      { id: 'first_go', title: 'On your marks', blurb: 'You started a test — that’s the first step!' },
+      { id: 'finisher', title: 'Finisher', blurb: 'You completed a full test. Huge effort!' },
+      { id: 'brave_try', title: 'Brave try', blurb: 'You finished a test with several facts still to polish — that’s real learning.' },
+      { id: 'comeback', title: 'Comeback star', blurb: 'You came back for another test. Keep going!' },
+      { id: 'spark', title: 'First spark', blurb: 'Your first green on the map!' },
+      { id: 'growing', title: 'Growing', blurb: '30 greens on your map — you’re building real skill.' },
+      { id: 'glowing', title: 'Glowing', blurb: '80 greens on your map. Wow!' },
+      { id: 'mapper', title: 'Map reader', blurb: 'You kept coming back to your map as it filled in.' },
+      { id: 'player', title: 'Player', blurb: 'You played a practice round. Fun counts!' },
+      { id: 'speedster', title: 'Speedster', blurb: 'Many super-fast correct answers in a long test (20+ questions).' },
+      { id: 'streak_keeper', title: 'Streak keeper', blurb: 'Five separate days with practice — consistency counts!' },
+      { id: 'accuracy_ace', title: 'Accuracy ace', blurb: 'A long test (20+ questions) with very high accuracy.' },
+      { id: 'rocket_boost', title: 'Rocket boost', blurb: 'A big jump in new greens in one test — serious progress.' },
+      { id: 'treasure_finder', title: 'Treasure finder', blurb: '48 greens on your map — you’re finding how far you’ve come.' },
+      { id: 'crowned_champion', title: 'Crowned champion', blurb: '100 greens — huge territory covered!' },
+      { id: 'puzzle_solver', title: 'Puzzle solver', blurb: 'For solving tricky problems or completing a challenge.' },
+      { id: 'math_wizard', title: 'Math wizard', blurb: 'For clever thinking, confidence, or maths magic.' },
+      {
+        id: 'genius',
+        title: 'Genius',
+        blurb: 'Your whole 1s–12s map is green — you unlocked Genius tables and the top tier of Toobles.',
+      },
+    ];
+
+    function loadEarnedBadges() {
+      try {
+        earnedBadges = new Set(JSON.parse(localStorage.getItem(LS_BADGES) || '[]'));
+      } catch (e) {
+        earnedBadges = new Set();
+      }
+    }
+
+    function saveEarnedBadges() {
+      localStorage.setItem(LS_BADGES, JSON.stringify([...earnedBadges]));
+    }
+
+    let badgeCeremonyQueue = [];
+    /** New badges earned during an active test/practice run — shown after the run ends */
+    let badgeCeremonyDeferredQueue = [];
+    let badgeCeremonyOpen = false;
+    let badgeCeremonyClosing = false;
+
+    function shouldDeferBadgeCeremony() {
+      return (
+        document.getElementById('view-test-run')?.classList.contains('active') ||
+        document.getElementById('view-practice-run')?.classList.contains('active')
+      );
+    }
+
+    function flushDeferredBadgeCeremonies() {
+      if (badgeCeremonyDeferredQueue.length === 0) return;
+      while (badgeCeremonyDeferredQueue.length) {
+        badgeCeremonyQueue.push(badgeCeremonyDeferredQueue.shift());
+      }
+      if (!badgeCeremonyOpen) playBadgeCeremonyNext();
+    }
+
+    function queueBadgeCeremony(id) {
+      badgeCeremonyQueue.push(id);
+      if (!badgeCeremonyOpen) playBadgeCeremonyNext();
+    }
+
+    function fireBadgeConfettiFanfare() {
+      if (typeof confetti !== 'function') return;
+      const colors = ['#a855f7', '#fbbf24', '#34d399', '#f472b6', '#60a5fa', '#facc15', '#fb7185'];
+      const burst = (o) => confetti(Object.assign({ colors }, o));
+      burst({ particleCount: 160, spread: 72, startVelocity: 52, origin: { x: 0.5, y: 0.4 } });
+      setTimeout(() => burst({ particleCount: 110, spread: 105, startVelocity: 42, origin: { x: 0.1, y: 0.55 }, angle: 55 }), 100);
+      setTimeout(() => burst({ particleCount: 110, spread: 105, startVelocity: 42, origin: { x: 0.9, y: 0.55 }, angle: 125 }), 220);
+      setTimeout(() => burst({ particleCount: 90, spread: 58, startVelocity: 36, origin: { x: 0.5, y: 0.28 } }), 400);
+      setTimeout(
+        () => burst({ particleCount: 150, spread: 360, ticks: 260, scalar: 1, origin: { x: 0.5, y: 0.5 } }),
+        520
+      );
+    }
+
+    function playBadgeCeremonyNext() {
+      if (badgeCeremonyQueue.length === 0) {
+        badgeCeremonyOpen = false;
+        document.body.classList.remove('badge-ceremony-open');
+        return;
+      }
+      const id = badgeCeremonyQueue.shift();
+      const def = BADGE_DEFS.find((d) => d.id === id);
+      if (!def) {
+        playBadgeCeremonyNext();
+        return;
+      }
+      badgeCeremonyOpen = true;
+      document.body.classList.add('badge-ceremony-open');
+      const root = $('#badgeCeremonyRoot');
+      const card = $('#badgeCeremonyCard');
+      const img = $('#badgeCeremonyImg');
+      const title = $('#badgeCeremonyTitle');
+      const blurb = $('#badgeCeremonyBlurb');
+      if (!root || !card || !img || !title || !blurb) {
+        playBadgeCeremonyNext();
+        return;
+      }
+      img.src = `badges/${def.id}.png`;
+      img.alt = def.title;
+      title.textContent = def.title;
+      blurb.textContent = def.blurb;
+      card.classList.remove('badge-ceremony-card-in', 'badge-ceremony-exit');
+      root.classList.remove('hidden');
+      root.setAttribute('aria-hidden', 'false');
+      requestAnimationFrame(() => {
+        void card.offsetWidth;
+        card.classList.add('badge-ceremony-card-in');
+      });
+      fireBadgeConfettiFanfare();
+      const dBtn = $('#badgeCeremonyDismiss');
+      if (dBtn) dBtn.focus();
+    }
+
+    function dismissBadgeCeremony() {
+      const root = $('#badgeCeremonyRoot');
+      if (!root || root.classList.contains('hidden') || badgeCeremonyClosing) return;
+      badgeCeremonyClosing = true;
+      const card = $('#badgeCeremonyCard');
+      card.classList.remove('badge-ceremony-card-in');
+      card.classList.add('badge-ceremony-exit');
+      setTimeout(() => {
+        badgeCeremonyClosing = false;
+        card.classList.remove('badge-ceremony-exit');
+        root.classList.add('hidden');
+        root.setAttribute('aria-hidden', 'true');
+        renderBadgeShelf();
+        playBadgeCeremonyNext();
+      }, 300);
+    }
+
+    function awardBadge(id) {
+      if (earnedBadges.has(id) || !BADGE_DEFS.some((d) => d.id === id)) return false;
+      earnedBadges.add(id);
+      saveEarnedBadges();
+      if (shouldDeferBadgeCeremony()) badgeCeremonyDeferredQueue.push(id);
+      else queueBadgeCeremony(id);
+      return true;
+    }
+
+    function getStats() {
+      const base = {
+        testsStarted: 0,
+        testsCompleted: 0,
+        practiceRounds: 0,
+        mapOpens: 0,
+        lifetimeCorrect: 0,
+        /** Sum of all practice points earned (correct answers + streak bonuses) */
+        lifetimePracticePoints: 0,
+        practiceLastDay: '',
+        practiceStreak: 0,
+        /** YYYY-MM-DD (local) days with ≥1 completed practice round — used for weekly streak */
+        practiceDates: [],
+      };
+      try {
+        return { ...base, ...JSON.parse(localStorage.getItem(LS_STATS) || '{}') };
+      } catch (e) {
+        return { ...base };
+      }
+    }
+
+    function saveStats(s) {
+      localStorage.setItem(LS_STATS, JSON.stringify(s));
+    }
+
+    function addLifetimePracticePoints(delta) {
+      if (!delta || delta <= 0) return;
+      const st = getStats();
+      st.lifetimePracticePoints = (st.lifetimePracticePoints || 0) + delta;
+      saveStats(st);
+    }
+
+    let homeLifetimePointsDisplayed = 0;
+    let homeLifetimePointsAnim = null;
+
+    function getLifetimePracticePoints() {
+      return getStats().lifetimePracticePoints || 0;
+    }
+
+    /** Animate the home header counter when navigating home (odometer-style roll). */
+    function refreshHomeLifetimePoints(animate) {
+      const el = $('#homeLifetimePoints');
+      if (!el) return;
+      const target = getLifetimePracticePoints();
+      if (homeLifetimePointsAnim) {
+        cancelAnimationFrame(homeLifetimePointsAnim);
+        homeLifetimePointsAnim = null;
+      }
+      if (!animate || target === homeLifetimePointsDisplayed) {
+        el.textContent = String(target);
+        homeLifetimePointsDisplayed = target;
+        return;
+      }
+      const start = homeLifetimePointsDisplayed;
+      const dur = 720;
+      const t0 = performance.now();
+      function step(now) {
+        const u = Math.min(1, (now - t0) / dur);
+        const eased = 1 - Math.pow(1 - u, 3);
+        const val = Math.round(start + (target - start) * eased);
+        el.textContent = String(val);
+        if (u < 1) {
+          homeLifetimePointsAnim = requestAnimationFrame(step);
+        } else {
+          homeLifetimePointsDisplayed = target;
+          homeLifetimePointsAnim = null;
+        }
+      }
+      homeLifetimePointsAnim = requestAnimationFrame(step);
+    }
+
+    function ymdLocal(d) {
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    function parseYmdLocal(s) {
+      const p = s.split('-').map(Number);
+      return new Date(p[0], p[1] - 1, p[2]);
+    }
+
+    /** Monday-start weeks (local calendar): full Mon–Sun week has practice every day */
+    function startOfWeekMonday(d) {
+      const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      const dow = x.getDay();
+      const offset = dow === 0 ? -6 : 1 - dow;
+      x.setDate(x.getDate() + offset);
+      return x;
+    }
+
+    function weekCompleteMonSun(monday, set) {
+      for (let i = 0; i < 7; i++) {
+        const t = new Date(monday);
+        t.setDate(t.getDate() + i);
+        if (!set.has(ymdLocal(t))) return false;
+      }
+      return true;
+    }
+
+    /** Lifetime count of calendar weeks (Mon–Sun) where they practiced every day — never resets */
+    function countFullPracticeWeeksTotal() {
+      const dates = getStats().practiceDates || [];
+      if (dates.length === 0) return 0;
+      const set = new Set(dates);
+      const sorted = [...dates].sort();
+      let curMonday = startOfWeekMonday(parseYmdLocal(sorted[0]));
+      const endMonday = startOfWeekMonday(new Date());
+      let count = 0;
+      const cur = new Date(curMonday);
+      while (cur.getTime() <= endMonday.getTime()) {
+        if (weekCompleteMonSun(cur, set)) count++;
+        cur.setDate(cur.getDate() + 7);
+      }
+      return count;
+    }
+
+    function countGreenCells() {
+      let n = 0;
+      for (let i = 1; i <= 12; i++) {
+        for (let j = 1; j <= 12; j++) {
+          if (grid144[gridOrderedKey(i, j)] === 'ok') n++;
+        }
+      }
+      return n;
+    }
+
+    /** Any tested fact on the map (green or red) — empty map should not earn Map reader */
+    function countGridCellsWithResult() {
+      let n = 0;
+      for (let i = 1; i <= 12; i++) {
+        for (let j = 1; j <= 12; j++) {
+          const st = grid144[gridOrderedKey(i, j)];
+          if (st === 'ok' || st === 'bad') n++;
+        }
+      }
+      return n;
+    }
+
+    function evaluateGridBadges() {
+      const ok = countGreenCells();
+      if (ok >= 1) awardBadge('spark');
+      if (ok >= 30) awardBadge('growing');
+      if (ok >= 80) awardBadge('glowing');
+      if (ok >= 48) awardBadge('treasure_finder');
+      if (ok >= 100) awardBadge('crowned_champion');
+      if (hasMastered12s()) awardBadge('genius');
+    }
+
+    function bumpPracticeDayStreak() {
+      const today = ymdLocal(new Date());
+      const st = getStats();
+      const last = st.practiceLastDay || '';
+      const y = new Date();
+      y.setDate(y.getDate() - 1);
+      const yesterday = ymdLocal(y);
+
+      if (last === today) return;
+
+      if (last === yesterday) {
+        st.practiceStreak = (st.practiceStreak || 0) + 1;
+      } else {
+        st.practiceStreak = 1;
+      }
+      st.practiceLastDay = today;
+      if (!Array.isArray(st.practiceDates)) st.practiceDates = [];
+      if (!st.practiceDates.includes(today)) {
+        st.practiceDates.push(today);
+        st.practiceDates.sort();
+        if (st.practiceDates.length > 400) st.practiceDates = st.practiceDates.slice(-400);
+      }
+      saveStats(st);
+      if (st.practiceStreak >= 5) awardBadge('streak_keeper');
+    }
+
+    let activeBadgeTooltipEl = null;
+    let badgeTooltipDismissInstalled = false;
+
+    function hideActiveBadgeTooltip() {
+      if (!activeBadgeTooltipEl) return;
+      activeBadgeTooltipEl.classList.add('opacity-0', 'invisible');
+      activeBadgeTooltipEl.style.visibility = '';
+      activeBadgeTooltipEl.style.opacity = '';
+      activeBadgeTooltipEl = null;
+    }
+
+    function ensureBadgeTooltipGlobalDismiss() {
+      if (badgeTooltipDismissInstalled) return;
+      badgeTooltipDismissInstalled = true;
+      window.addEventListener('scroll', hideActiveBadgeTooltip, true);
+      window.addEventListener('resize', hideActiveBadgeTooltip);
+    }
+
+    function positionBadgeShelfTooltip(tip, btn, arrow) {
+      const margin = 10;
+      const gap = 8;
+      const br = btn.getBoundingClientRect();
+      const arrowDown =
+        'pointer-events-none absolute -top-2 left-1/2 h-0 w-0 -translate-x-1/2 border-x-[7px] border-b-[8px] border-x-transparent border-b-violet-950';
+      const arrowUp =
+        'pointer-events-none absolute -bottom-2 left-1/2 h-0 w-0 -translate-x-1/2 border-x-[7px] border-t-[8px] border-x-transparent border-t-violet-950';
+
+      tip.classList.remove('opacity-0', 'invisible');
+      tip.style.visibility = 'hidden';
+      tip.style.opacity = '0';
+      tip.style.position = 'fixed';
+      tip.style.zIndex = '250';
+      tip.style.maxWidth = `min(17rem, calc(100vw - ${margin * 2}px))`;
+      tip.style.width = 'max-content';
+      tip.style.left = `${br.left + br.width / 2}px`;
+      tip.style.transform = 'translate(-50%, 0)';
+      tip.style.top = `${br.bottom + gap}px`;
+      arrow.className = arrowDown;
+
+      requestAnimationFrame(() => {
+        let tr = tip.getBoundingClientRect();
+        let top = br.bottom + gap;
+        if (tr.bottom > window.innerHeight - margin) {
+          top = br.top - gap - tr.height;
+          arrow.className = arrowUp;
+        }
+        if (top < margin) top = margin;
+        tip.style.top = `${top}px`;
+
+        tr = tip.getBoundingClientRect();
+        let cx = br.left + br.width / 2;
+        if (tr.left < margin) cx += margin - tr.left;
+        if (tr.right > window.innerWidth - margin) cx -= tr.right - window.innerWidth + margin;
+        tip.style.left = `${cx}px`;
+
+        tip.style.visibility = 'visible';
+        tip.style.opacity = '1';
+        tip.classList.remove('opacity-0');
+        activeBadgeTooltipEl = tip;
+      });
+    }
+
+    function renderBadgeShelf() {
+      ensureBadgeTooltipGlobalDismiss();
+      document.querySelectorAll('.badge-shelf-tooltip').forEach((el) => el.remove());
+
+      const host = $('#homeBadgesGrid');
+      if (!host) return;
+      host.innerHTML = '';
+      const n = BADGE_DEFS.length;
+      const cols = Math.max(1, Math.ceil(n / 2));
+      host.className =
+        'grid w-full auto-rows-auto grid-flow-row content-start items-center justify-items-center gap-x-1.5 gap-y-1 pt-2 sm:pt-2.5 sm:gap-x-2 sm:gap-y-1.5 mt-1 sm:mt-1.5';
+      host.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
+      host.style.gridTemplateRows = '';
+
+      BADGE_DEFS.forEach((def) => {
+        const earned = earnedBadges.has(def.id);
+
+        const wrap = document.createElement('div');
+        wrap.className =
+          'relative flex min-h-0 min-w-0 items-center justify-center overflow-visible p-0.5 ' +
+          (earned ? '' : 'rounded-lg border border-violet-400/70 sm:rounded-xl');
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className =
+          'tap relative flex aspect-square w-full min-h-0 min-w-0 items-stretch justify-stretch overflow-hidden rounded-lg p-0 shadow-md ring-2 transition hover:z-10 hover:scale-105 hover:shadow-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-amber-400/60 focus:ring-offset-2 focus:ring-offset-white sm:rounded-xl ' +
+          (earned
+            ? 'ring-amber-400/80 shadow-lg shadow-amber-500/20'
+            : 'badge-btn-unearned ring-violet-400/55');
+
+        btn.setAttribute('aria-label', def.title);
+        btn.setAttribute('aria-describedby', `badge-tip-${def.id}`);
+
+        const img = document.createElement('img');
+        img.src = `badges/${def.id}.png`;
+        img.alt = '';
+        img.decoding = 'async';
+        img.loading = 'lazy';
+        img.className =
+          'pointer-events-none h-full w-full object-cover ' +
+          (earned ? '' : 'badge-img-unearned');
+        btn.appendChild(img);
+
+        const tip = document.createElement('div');
+        tip.id = `badge-tip-${def.id}`;
+        tip.setAttribute('role', 'tooltip');
+        tip.className =
+          'badge-shelf-tooltip invisible relative opacity-0 rounded-xl border border-violet-500/25 bg-violet-950 px-3 py-2.5 text-left shadow-2xl shadow-black/25 ring-1 ring-white/10';
+
+        const tipTitle = document.createElement('p');
+        tipTitle.className = 'text-xs font-bold leading-tight text-white';
+        tipTitle.textContent = def.title;
+
+        const tipBody = document.createElement('p');
+        tipBody.className = 'mt-1.5 text-[11px] leading-snug text-violet-200';
+        tipBody.textContent = def.blurb;
+
+        const arrow = document.createElement('div');
+        arrow.setAttribute('aria-hidden', 'true');
+
+        tip.appendChild(tipTitle);
+        tip.appendChild(tipBody);
+        tip.appendChild(arrow);
+
+        document.body.appendChild(tip);
+
+        const showTip = () => {
+          hideActiveBadgeTooltip();
+          positionBadgeShelfTooltip(tip, btn, arrow);
+        };
+        const hideTip = () => {
+          if (activeBadgeTooltipEl === tip) hideActiveBadgeTooltip();
+        };
+
+        btn.addEventListener('mouseenter', showTip);
+        btn.addEventListener('mouseleave', hideTip);
+        btn.addEventListener('focusin', showTip);
+        btn.addEventListener('focusout', hideTip);
+
+        wrap.appendChild(btn);
+        host.appendChild(wrap);
+      });
+    }
+
+    function gridOrderedKey(a, b) {
+      return `${a}_${b}`;
+    }
+
+    function factKey(a, b) {
+      const x = Math.min(a, b);
+      const y = Math.max(a, b);
+      return `${x}x${y}`;
+    }
+
+    function parseFactKey(key) {
+      const [a, b] = key.split('x').map(Number);
+      return { a, b, display: `${a} × ${b}` };
+    }
+
+    /** tm = test wrong/timeout, ts = test correct-but-slow, pm = practice wrong */
+    let factStats = {};
+
+    function loadFactStats() {
+      try {
+        factStats = JSON.parse(localStorage.getItem(LS_FACT_STATS) || '{}');
+        if (!factStats || typeof factStats !== 'object') factStats = {};
+      } catch (e) {
+        factStats = {};
+      }
+    }
+
+    function saveFactStats() {
+      localStorage.setItem(LS_FACT_STATS, JSON.stringify(factStats));
+    }
+
+    function ensureFactStat(fk) {
+      if (!factStats[fk]) factStats[fk] = { tm: 0, ts: 0, pm: 0 };
+      return factStats[fk];
+    }
+
+    /** Relative likelihood this fact is chosen next (higher = weak / needs reps) */
+    function getFactStruggleWeight(fk) {
+      const s = factStats[fk];
+      if (!s) return 1;
+      const w = 1 + s.tm * 4 + s.ts * 2 + s.pm * 3;
+      return Math.max(0.2, w);
+    }
+
+    function recordTestFactOutcome(fk, outcome) {
+      const st = ensureFactStat(fk);
+      if (outcome === 'ok') {
+        st.tm = Math.max(0, st.tm - 1);
+        st.ts = Math.max(0, st.ts - 1);
+      } else if (outcome === 'slow') {
+        st.ts = Math.min(50, st.ts + 1);
+        st.tm = Math.max(0, st.tm - 1);
+      } else {
+        st.tm = Math.min(99, st.tm + 1);
+      }
+      saveFactStats();
+    }
+
+    function recordPracticeFactOutcome(fk, ok) {
+      const st = ensureFactStat(fk);
+      if (ok) st.pm = Math.max(0, st.pm - 1);
+      else st.pm = Math.min(99, st.pm + 1);
+      saveFactStats();
+    }
+
+    function weightedRandomOne(keys) {
+      if (!keys || keys.length === 0) return null;
+      if (keys.length === 1) return keys[0];
+      const weights = keys.map((k) => getFactStruggleWeight(k) * (0.88 + Math.random() * 0.24));
+      const sum = weights.reduce((a, b) => a + b, 0);
+      let r = Math.random() * sum;
+      for (let i = 0; i < keys.length; i++) {
+        r -= weights[i];
+        if (r <= 0) return keys[i];
+      }
+      return keys[keys.length - 1];
+    }
+
+    function buildWeightedTestQueue(pool) {
+      const remaining = [...pool];
+      const out = [];
+      while (remaining.length) {
+        const weights = remaining.map((q) => {
+          const fk = factKey(q.a, q.b);
+          return getFactStruggleWeight(fk) * (0.88 + Math.random() * 0.24);
+        });
+        const sum = weights.reduce((a, b) => a + b, 0);
+        let r = Math.random() * sum;
+        let pick = 0;
+        for (let i = 0; i < remaining.length; i++) {
+          r -= weights[i];
+          if (r <= 0) {
+            pick = i;
+            break;
+          }
+          pick = i;
+        }
+        out.push(remaining.splice(pick, 1)[0]);
+      }
+      return out;
+    }
+
+    function loadGrid() {
+      try {
+        grid144 = JSON.parse(localStorage.getItem(LS_GRID) || '{}');
+      } catch (e) {
+        grid144 = {};
+      }
+      if (Object.keys(grid144).length === 0) migrateOldStillLearningToGrid();
+    }
+
+    /** Every cell in the 1s–12s map is green — unlocks Genius tables 13s–20s */
+    function hasMastered12s() {
+      for (let i = 1; i <= 12; i++) {
+        for (let j = 1; j <= 12; j++) {
+          if (grid144[gridOrderedKey(i, j)] !== 'ok') return false;
+        }
+      }
+      return true;
+    }
+
+    function getTableMax() {
+      loadGrid();
+      return hasMastered12s() ? 20 : 12;
+    }
+
+    function migrateOldStillLearningToGrid() {
+      try {
+        const old = JSON.parse(localStorage.getItem(LS_STILL) || '[]');
+        if (!Array.isArray(old) || old.length === 0) return;
+        old.forEach((k) => {
+          const { a, b } = parseFactKey(k);
+          grid144[gridOrderedKey(a, b)] = 'bad';
+          if (a !== b) grid144[gridOrderedKey(b, a)] = 'bad';
+        });
+        localStorage.setItem(LS_GRID, JSON.stringify(grid144));
+      } catch (e) { /* ignore */ }
+    }
+
+    function saveGrid() {
+      localStorage.setItem(LS_GRID, JSON.stringify(grid144));
+      syncSetsFromGrid();
+      saveSets();
+      evaluateGridBadges();
+      refreshTestRangeSelectOptions();
+      refreshPracticeRangeSelectOptions();
+      const gridView = $('#view-grid');
+      if (gridView && gridView.classList.contains('active')) {
+        updateGeniusTabButtons();
+        if (gridMapView === 'genius') renderGeniusOrLocked('#gridProgressHost');
+        else renderFullGrid('#gridProgressHost');
+        updateGridSummary();
+      }
+    }
+
+    function syncSetsFromGrid() {
+      stillLearning.clear();
+      gotIt.clear();
+      const maxT = getTableMax();
+      for (let t = 1; t <= maxT; t++) {
+        for (let k = 1; k <= 12; k++) {
+          const fk = factKey(t, k);
+          const sTk = grid144[gridOrderedKey(t, k)];
+          const sKt = t === k ? undefined : grid144[gridOrderedKey(k, t)];
+          if (sTk === 'bad' || sKt === 'bad') stillLearning.add(fk);
+        }
+      }
+      for (let t = 1; t <= maxT; t++) {
+        for (let k = 1; k <= 12; k++) {
+          const fk = factKey(t, k);
+          const okTk = grid144[gridOrderedKey(t, k)] === 'ok';
+          const okKt = t === k ? true : grid144[gridOrderedKey(k, t)] === 'ok';
+          if (okTk && okKt && !stillLearning.has(fk)) gotIt.add(fk);
+        }
+      }
+    }
+
+    function loadSets() {
+      loadGrid();
+      syncSetsFromGrid();
+    }
+
+    function saveSets() {
+      localStorage.setItem(LS_STILL, JSON.stringify([...stillLearning]));
+      localStorage.setItem(LS_GOT, JSON.stringify([...gotIt]));
+      updateHomeCounts();
+    }
+
+    function updateHomeCounts() {
+      loadGrid();
+      syncSetsFromGrid();
+      const mastered = countGreenCells();
+      const left = Math.max(0, 144 - mastered);
+      const elM = $('#homeCountMastered');
+      const elL = $('#homeCountLeft');
+      if (elM) elM.textContent = String(mastered);
+      if (elL) elL.textContent = String(left);
+      const nStill = stillLearning.size;
+      const badge = $('#homePackBadge');
+      if (badge) {
+        badge.textContent = nStill;
+        badge.classList.toggle('hidden', nStill === 0);
+      }
+    }
+
+    function updateHomeStreakPanel() {
+      const st = getStats();
+      const days = Math.min(99, Math.max(0, st.practiceStreak || 0));
+      const weeks = countFullPracticeWeeksTotal();
+      const elDays = $('#homeStreakDays');
+      const elWeeks = $('#homeWeeklyStreak');
+      const host = $('#homeStreakFlames');
+      if (elDays) elDays.textContent = String(days);
+      if (elWeeks) elWeeks.textContent = String(weeks);
+      if (host) {
+        const cap = 7;
+        const lit = Math.min(days, cap);
+        host.innerHTML = '';
+        for (let i = 0; i < cap; i++) {
+          const s = document.createElement('span');
+          s.textContent = '🔥';
+          s.className =
+            'select-none text-2xl leading-none sm:text-3xl ' +
+            (i < lit ? 'opacity-100' : 'opacity-[0.18] grayscale');
+          host.appendChild(s);
+        }
+      }
+    }
+
+    const practiceState = {
+      running: false,
+      buffer: '',
+      score: 0,
+      streak: 0,
+      streak10: 0,
+      timer: null,
+      current: null,
+      /** Populated at round start when mode is "tables"; random picks from this pool */
+      tablePoolKeys: null,
+    };
+
+    // ---------- Views ----------
+    const views = {
+      home: $('#view-home'),
+      'test-setup': $('#view-test-setup'),
+      'test-run': $('#view-test-run'),
+      'test-results': $('#view-test-results'),
+      grid: $('#view-grid'),
+      'practice-setup': $('#view-practice-setup'),
+      'practice-run': $('#view-practice-run'),
+      'practice-end': $('#view-practice-end'),
+    };
+
+    function refreshNavButtons() {
+      const activeSection = document.querySelector('section.view.active');
+      const viewName = activeSection ? activeSection.id.replace('view-', '') : 'home';
+      $$('.nav-btn').forEach((btn) => {
+        const nav = btn.getAttribute('data-nav');
+        if (nav === 'home') {
+          btn.classList.toggle('bg-white/20', viewName === 'home');
+        } else if (nav === 'test-setup') {
+          btn.classList.toggle(
+            'bg-white/20',
+            viewName === 'test-setup' || viewName === 'test-run' || viewName === 'test-results'
+          );
+        } else if (nav === 'practice') {
+          btn.classList.toggle(
+            'bg-white/20',
+            viewName === 'practice-setup' || viewName === 'practice-run' || viewName === 'practice-end'
+          );
+        } else if (nav === 'grid') {
+          btn.classList.toggle('bg-white/20', viewName === 'grid' && gridMapView === 'classic');
+        } else if (nav === 'grid-genius') {
+          btn.classList.toggle('bg-white/20', viewName === 'grid' && gridMapView === 'genius');
+        } else {
+          btn.classList.toggle('bg-white/20', viewName === nav);
+        }
+      });
+    }
+
+    function showView(name) {
+      if (name !== 'test-run') clearTestTimers();
+      if (name !== 'practice-run' && practiceState.timer) {
+        clearInterval(practiceState.timer);
+        practiceState.timer = null;
+        practiceState.running = false;
+      }
+      if (name !== 'practice-run') {
+        $$('input[name="practiceMode"]').forEach((r) => {
+          r.disabled = false;
+        });
+        $$('input[name="practiceDuration"]').forEach((r) => {
+          r.disabled = false;
+        });
+      }
+      Object.entries(views).forEach(([k, el]) => {
+        if (el) el.classList.toggle('active', k === name);
+      });
+      if (name === 'home') {
+        loadPlayerNameIntoField();
+        renderBadgeShelf();
+        updateHomeStreakPanel();
+        updateHomeCounts();
+        refreshHomeLifetimePoints(true);
+      }
+      if (name === 'test-setup') refreshTestRangeSelectOptions();
+      if (name === 'practice-setup') refreshPracticeRangeSelectOptions();
+      refreshNavButtons();
+      if (name === 'test-setup') refreshTestSetupUI();
+      if (name === 'practice-setup') refreshPracticePanel();
+    }
+
+    // ---------- Test setup UI ----------
+    function getTestScope() {
+      return document.querySelector('input[name="testScope"]:checked')?.value;
+    }
+
+    function fillTestRangeSelectOptions() {
+      loadGrid();
+      const smin = $('#rangeMin');
+      const smax = $('#rangeMax');
+      if (!smin || !smax) return;
+      const maxN = getTableMax();
+      let lo = Math.min(+smin.value || 1, maxN);
+      let hi = Math.min(Math.max(+smax.value || 12, 1), maxN);
+      if (lo > hi) [lo, hi] = [hi, lo];
+      smin.innerHTML = '';
+      smax.innerHTML = '';
+      for (let n = 1; n <= maxN; n++) {
+        const o1 = document.createElement('option');
+        o1.value = n;
+        o1.textContent = n + 's';
+        smin.appendChild(o1);
+        const o2 = document.createElement('option');
+        o2.value = n;
+        o2.textContent = n + 's';
+        smax.appendChild(o2);
+      }
+      smin.value = String(lo);
+      smax.value = String(hi);
+    }
+
+    function refreshTestRangeSelectOptions() {
+      fillTestRangeSelectOptions();
+      refreshTestSetupUI();
+    }
+
+    function initRangeSelects() {
+      fillTestRangeSelectOptions();
+      const smin = $('#rangeMin');
+      const smax = $('#rangeMax');
+      const sync = () => {
+        let a = +smin.value;
+        let b = +smax.value;
+        if (a > b) {
+          smin.value = String(b);
+          smax.value = String(a);
+        }
+        refreshTestSetupUI();
+      };
+      if (!testRangeSelectsWired) {
+        testRangeSelectsWired = true;
+        smin.addEventListener('change', sync);
+        smax.addEventListener('change', sync);
+        $$('input[name="testScope"]').forEach((r) =>
+          r.addEventListener('change', () => {
+            refreshTestSetupUI();
+          })
+        );
+        $$('input[name="testDuration"]').forEach((r) =>
+          r.addEventListener('change', () => refreshTestSetupUI())
+        );
+      }
+      refreshTestSetupUI();
+    }
+
+    function countQuestionsForCurrentSetup() {
+      loadGrid();
+      const scope = getTestScope();
+      let a = Math.min(+$('#rangeMin').value, +$('#rangeMax').value);
+      let b = Math.max(+$('#rangeMin').value, +$('#rangeMax').value);
+      if (scope === 'untested') {
+        a = 1;
+        b = 12;
+      }
+      let pool = buildQueueForRange(a, b);
+      if (scope === 'untested') {
+        pool = pool.filter((q) => !grid144[gridOrderedKey(q.a, q.b)]);
+      }
+      return { n: pool.length, a, b, scope };
+    }
+
+    function refreshTestSetupUI() {
+      const scope = getTestScope();
+      const rangeWrap = $('#testSetupRangeWrap');
+      const durWrap = $('#testSetupDurationWrap');
+      const startBtn = $('#startTestBtn');
+      const untestedZero = $('#testSetupUntestedZero');
+
+      document.querySelectorAll('.test-scope-card').forEach((el) => {
+        const m = el.getAttribute('data-test-scope');
+        const on = m === scope;
+        el.classList.toggle('border-violet-200', !on);
+        el.classList.toggle('border-violet-500', on);
+        el.classList.toggle('ring-2', on);
+        el.classList.toggle('ring-violet-300', on);
+      });
+
+      if (!scope) {
+        rangeWrap?.classList.add('hidden');
+        durWrap?.classList.add('hidden');
+        startBtn?.classList.add('hidden');
+        untestedZero?.classList.add('hidden');
+        return;
+      }
+
+      durWrap?.classList.remove('hidden');
+      startBtn?.classList.remove('hidden');
+
+      if (scope === 'untested') {
+        rangeWrap?.classList.add('hidden');
+        untestedZero?.classList.add('hidden');
+        const { n } = countQuestionsForCurrentSetup();
+        if (startBtn) startBtn.disabled = n === 0;
+        if (untestedZero) {
+          if (n === 0) {
+            untestedZero.textContent =
+              'No blank cells left on your whole map — amazing! Try “Let me choose my facts” for a full test.';
+            untestedZero.classList.remove('hidden');
+          }
+        }
+        return;
+      }
+
+      rangeWrap?.classList.remove('hidden');
+      untestedZero?.classList.add('hidden');
+      const { n } = countQuestionsForCurrentSetup();
+      if (startBtn) startBtn.disabled = n === 0;
+    }
+
+    function getPracticeMode() {
+      return document.querySelector('input[name="practiceMode"]:checked')?.value;
+    }
+
+    function getPracticeRoundSeconds() {
+      if (!getPracticeMode()) return 60;
+      const raw = document.querySelector('input[name="practiceDuration"]:checked')?.value;
+      const v = raw == null ? 60 : +raw;
+      if (v === 0) return 600;
+      return Number.isFinite(v) && v > 0 ? v : 60;
+    }
+
+    function practiceTablePoolCount() {
+      const f = $('#practiceRangeFrom');
+      const t = $('#practiceRangeTo');
+      if (!f || !t) return 0;
+      const lo = Math.min(+f.value, +t.value);
+      const hi = Math.max(+f.value, +t.value);
+      return (hi - lo + 1) * 12;
+    }
+
+    function factKeysForTableRange(lo, hi) {
+      const keys = [];
+      for (let table = lo; table <= hi; table++) {
+        for (let k = 1; k <= 12; k++) {
+          keys.push(factKey(table, k));
+        }
+      }
+      return keys;
+    }
+
+    function fillPracticeRangeSelectOptions() {
+      loadGrid();
+      const sf = $('#practiceRangeFrom');
+      const st = $('#practiceRangeTo');
+      if (!sf || !st) return;
+      const maxN = getTableMax();
+      let lo = Math.min(+sf.value || 1, maxN);
+      let hi = Math.min(Math.max(+st.value || 12, 1), maxN);
+      if (lo > hi) [lo, hi] = [hi, lo];
+      sf.innerHTML = '';
+      st.innerHTML = '';
+      for (let n = 1; n <= maxN; n++) {
+        const o1 = document.createElement('option');
+        o1.value = n;
+        o1.textContent = n + 's';
+        sf.appendChild(o1);
+        const o2 = document.createElement('option');
+        o2.value = n;
+        o2.textContent = n + 's';
+        st.appendChild(o2);
+      }
+      sf.value = String(lo);
+      st.value = String(hi);
+    }
+
+    function refreshPracticeRangeSelectOptions() {
+      fillPracticeRangeSelectOptions();
+      refreshPracticePanel();
+    }
+
+    function initPracticeRangeSelects() {
+      fillPracticeRangeSelectOptions();
+      const sf = $('#practiceRangeFrom');
+      const st = $('#practiceRangeTo');
+      const sync = () => {
+        let a = +sf.value;
+        let b = +st.value;
+        if (a > b) {
+          sf.value = String(b);
+          st.value = String(a);
+        }
+        refreshPracticePanel();
+      };
+      if (!practiceRangeSelectsWired) {
+        practiceRangeSelectsWired = true;
+        sf.addEventListener('change', sync);
+        st.addEventListener('change', sync);
+        $$('input[name="practiceDuration"]').forEach((r) =>
+          r.addEventListener('change', () => refreshPracticePanel())
+        );
+      }
+    }
+
+    function renderPracticeStillTile() {
+      const hasEl = $('#practiceStillHasFacts');
+      const noEl = $('#practiceStillNoFacts');
+      const list = $('#practiceStillFactsList');
+      if (!hasEl || !noEl || !list) return;
+      const keys = [...stillLearning].sort();
+      if (keys.length === 0) {
+        hasEl.classList.add('hidden');
+        noEl.classList.remove('hidden');
+        list.innerHTML = '';
+        return;
+      }
+      noEl.classList.add('hidden');
+      hasEl.classList.remove('hidden');
+      list.innerHTML = '';
+      keys.forEach((key) => {
+        const { display } = parseFactKey(key);
+        const li = document.createElement('li');
+        li.className =
+          'rounded-full bg-orange-50 px-2.5 py-1 text-xs font-semibold text-orange-900 ring-1 ring-orange-200/90 sm:px-3 sm:text-sm';
+        li.setAttribute('role', 'listitem');
+        li.textContent = display;
+        list.appendChild(li);
+      });
+    }
+
+    function syncPracticeRunProgress() {
+      const rp = $('#practiceRunProgress');
+      if (!rp) return;
+      const mode = getPracticeMode();
+      if (!mode) {
+        rp.textContent = '—';
+        return;
+      }
+      if (mode === 'still') {
+        const n = stillLearning.size;
+        rp.textContent =
+          n === 0 ? 'Still learning' : `Still learning · ${n} fact${n === 1 ? '' : 's'}`;
+      } else {
+        const lo = Math.min(+$('#practiceRangeFrom').value, +$('#practiceRangeTo').value);
+        const hi = Math.max(+$('#practiceRangeFrom').value, +$('#practiceRangeTo').value);
+        const n = practiceTablePoolCount();
+        rp.textContent = `Tables ${lo}s–${hi}s · ${n} facts`;
+      }
+    }
+
+    function refreshPracticePanel() {
+      loadGrid();
+      syncSetsFromGrid();
+      renderPracticeStillTile();
+      const mode = getPracticeMode();
+      const rangeRow = $('#practiceRangeRow');
+      const durWrap = $('#practiceSetupDurationWrap');
+      const startBtn = $('#startPracticeBtn');
+      const stillEmpty = stillLearning.size === 0;
+
+      document.querySelectorAll('.practice-mode-card').forEach((el) => {
+        const m = el.getAttribute('data-practice-mode');
+        const on = m === mode;
+        el.classList.toggle('border-violet-200', !on);
+        el.classList.toggle('border-violet-500', on);
+        el.classList.toggle('ring-2', on);
+        el.classList.toggle('ring-violet-300', on);
+      });
+
+      if (!mode) {
+        rangeRow?.classList.add('hidden');
+        durWrap?.classList.add('hidden');
+        startBtn?.classList.add('hidden');
+        syncPracticeRunProgress();
+        return;
+      }
+
+      if (mode === 'still') {
+        rangeRow?.classList.add('hidden');
+        durWrap?.classList.remove('hidden');
+        if (stillEmpty) {
+          startBtn?.classList.add('hidden');
+        } else {
+          startBtn?.classList.remove('hidden');
+          if (startBtn) startBtn.disabled = false;
+        }
+        syncPracticeRunProgress();
+        return;
+      }
+
+      rangeRow?.classList.remove('hidden');
+      durWrap?.classList.remove('hidden');
+      startBtn?.classList.remove('hidden');
+      const nFacts = practiceTablePoolCount();
+      if (startBtn) startBtn.disabled = nFacts === 0;
+      syncPracticeRunProgress();
+    }
+
+    function renderFullGrid(hostSelector = '#resultsGridHost') {
+      const host = $(hostSelector);
+      if (!host) return;
+      host.innerHTML = '';
+      const tbl = document.createElement('table');
+      tbl.className = 'w-full border-collapse text-center text-[9px] sm:text-[11px] md:text-sm';
+      const thead = document.createElement('thead');
+      const trh = document.createElement('tr');
+      const corner = document.createElement('th');
+      corner.className = 'p-0.5 sm:p-1 font-bold text-violet-600';
+      corner.textContent = '×';
+      trh.appendChild(corner);
+      for (let j = 1; j <= 12; j++) {
+        const th = document.createElement('th');
+        th.className = 'p-0.5 sm:p-1 font-bold text-violet-700';
+        th.textContent = j;
+        trh.appendChild(th);
+      }
+      thead.appendChild(trh);
+      tbl.appendChild(thead);
+      const tbody = document.createElement('tbody');
+      for (let i = 1; i <= 12; i++) {
+        const tr = document.createElement('tr');
+        const rowHead = document.createElement('th');
+        rowHead.className = 'p-0.5 sm:p-1 font-bold text-violet-700 align-middle';
+        rowHead.textContent = i;
+        tr.appendChild(rowHead);
+        for (let j = 1; j <= 12; j++) {
+          const td = document.createElement('td');
+          const st = grid144[gridOrderedKey(i, j)];
+          const prod = i * j;
+          td.className = 'border border-violet-100/80 p-0.5 sm:p-1';
+          if (st === 'ok') td.className += ' bg-emerald-400 text-emerald-950 font-semibold';
+          else if (st === 'bad') td.className += ' bg-rose-400 text-rose-950 font-semibold';
+          else td.className += ' bg-white text-violet-300';
+          td.textContent = prod;
+          tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+      }
+      tbl.appendChild(tbody);
+      host.appendChild(tbl);
+    }
+
+    function updateGridSummary() {
+      let ok = 0;
+      let bad = 0;
+      let untested = 0;
+      if (gridMapView === 'genius') {
+        if (!hasMastered12s()) {
+          const el = $('#gridSummaryCounts');
+          if (el) {
+            el.textContent =
+              'Genius (13s–20s): locked — turn every cell on your 1s–12s map green to unlock.';
+          }
+          return;
+        }
+        for (let i = 13; i <= 20; i++) {
+          for (let j = 1; j <= 12; j++) {
+            const st = grid144[gridOrderedKey(i, j)];
+            if (st === 'ok') ok++;
+            else if (st === 'bad') bad++;
+            else untested++;
+          }
+        }
+        const el = $('#gridSummaryCounts');
+        if (el) {
+          el.textContent = `Genius (13s–20s × 1–12): ${ok} green · ${bad} red · ${untested} not tested yet`;
+        }
+      } else {
+        for (let i = 1; i <= 12; i++) {
+          for (let j = 1; j <= 12; j++) {
+            const st = grid144[gridOrderedKey(i, j)];
+            if (st === 'ok') ok++;
+            else if (st === 'bad') bad++;
+            else untested++;
+          }
+        }
+        const el = $('#gridSummaryCounts');
+        if (el) el.textContent = `${ok} green · ${bad} red · ${untested} not tested yet`;
+      }
+    }
+
+    function renderGeniusGrid(hostSelector = '#gridProgressHost') {
+      const host = $(hostSelector);
+      if (!host) return;
+      host.innerHTML = '';
+      const tbl = document.createElement('table');
+      tbl.className = 'w-full border-collapse text-center text-[9px] sm:text-[11px] md:text-sm';
+      const thead = document.createElement('thead');
+      const trh = document.createElement('tr');
+      const corner = document.createElement('th');
+      corner.className = 'p-0.5 sm:p-1 font-bold text-violet-600';
+      corner.textContent = '×';
+      trh.appendChild(corner);
+      for (let j = 1; j <= 12; j++) {
+        const th = document.createElement('th');
+        th.className = 'p-0.5 sm:p-1 font-bold text-violet-700';
+        th.textContent = j;
+        trh.appendChild(th);
+      }
+      thead.appendChild(trh);
+      tbl.appendChild(thead);
+      const tbody = document.createElement('tbody');
+      for (let i = 13; i <= 20; i++) {
+        const tr = document.createElement('tr');
+        const rowHead = document.createElement('th');
+        rowHead.className = 'p-0.5 sm:p-1 font-bold text-violet-700 align-middle';
+        rowHead.textContent = i;
+        tr.appendChild(rowHead);
+        for (let j = 1; j <= 12; j++) {
+          const td = document.createElement('td');
+          const st = grid144[gridOrderedKey(i, j)];
+          const prod = i * j;
+          td.className = 'border border-violet-100/80 p-0.5 sm:p-1';
+          if (st === 'ok') td.className += ' bg-emerald-400 text-emerald-950 font-semibold';
+          else if (st === 'bad') td.className += ' bg-rose-400 text-rose-950 font-semibold';
+          else td.className += ' bg-white text-violet-300';
+          td.textContent = prod;
+          tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+      }
+      tbl.appendChild(tbody);
+      host.appendChild(tbl);
+    }
+
+    function renderGeniusLockedSection(hostSelector = '#gridProgressHost') {
+      const host = $(hostSelector);
+      if (!host) return;
+      host.innerHTML = '';
+      const wrap = document.createElement('div');
+      wrap.className =
+        'flex min-h-[min(320px,50vh)] flex-col items-center justify-center gap-4 px-4 py-10 text-center sm:gap-5 sm:py-14';
+      wrap.setAttribute('role', 'status');
+      wrap.setAttribute('aria-live', 'polite');
+
+      const iconWrap = document.createElement('div');
+      iconWrap.className =
+        'flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-violet-300/80 bg-violet-100/90 text-3xl shadow-inner sm:h-20 sm:w-20 sm:text-4xl';
+      iconWrap.setAttribute('aria-hidden', 'true');
+      iconWrap.textContent = '🔒';
+
+      const h3 = document.createElement('h3');
+      h3.className = 'text-lg font-extrabold text-violet-950 sm:text-xl';
+      h3.textContent = 'Genius 13s–20s is locked';
+
+      const p = document.createElement('p');
+      p.className = 'max-w-md text-sm leading-relaxed text-violet-600 sm:text-base';
+      p.textContent =
+        'When every fact on your 1s–12s map is green, this map unlocks — rows 13 through 20, still × 1–12. Keep testing and practising on the classic map first.';
+
+      wrap.appendChild(iconWrap);
+      wrap.appendChild(h3);
+      wrap.appendChild(p);
+      host.appendChild(wrap);
+    }
+
+    function renderGeniusOrLocked(hostSelector = '#gridProgressHost') {
+      if (hasMastered12s()) renderGeniusGrid(hostSelector);
+      else renderGeniusLockedSection(hostSelector);
+    }
+
+    function updateGeniusTabButtons() {
+      loadGrid();
+      const unlocked = hasMastered12s();
+      const geniusBtn = $('#gridTabGeniusBtn');
+      const classicBtn = $('#gridTabClassicBtn');
+      if (geniusBtn) {
+        geniusBtn.title = unlocked
+          ? 'Tables 13s through 20s (facts × 1–12)'
+          : 'Turn the whole 1s–12s map green to unlock Genius (13s–20s)';
+        const geniusLockSvg =
+          '<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+        geniusBtn.innerHTML = unlocked
+          ? 'Genius 13s–20s'
+          : `Genius 13s–20s <span class="ml-1 inline-flex items-center align-middle opacity-70" aria-hidden="true">${geniusLockSvg}</span>`;
+      }
+      const navGenius = $('#navGeniusBtn');
+      const navLock = $('#navGeniusBtnLock');
+      if (navGenius) {
+        navGenius.title = unlocked
+          ? 'Tables 13s through 20s (facts × 1–12)'
+          : 'Turn the whole 1s–12s map green to unlock Genius (13s–20s)';
+      }
+      if (navLock) navLock.classList.toggle('hidden', unlocked);
+      if (classicBtn && geniusBtn) {
+        const onClassic = gridMapView === 'classic';
+        classicBtn.setAttribute('aria-selected', onClassic ? 'true' : 'false');
+        geniusBtn.setAttribute('aria-selected', onClassic ? 'false' : 'true');
+        classicBtn.className =
+          'tap rounded-xl border-2 px-3 py-1.5 text-sm font-bold shadow-sm sm:px-4 ' +
+          (onClassic
+            ? 'border-violet-500 bg-violet-600 text-white'
+            : 'border-violet-200 bg-violet-100/80 text-violet-700');
+        geniusBtn.className =
+          'tap rounded-xl border-2 px-3 py-1.5 text-sm font-bold shadow-sm sm:px-4 ' +
+          (!onClassic
+            ? 'border-violet-500 bg-violet-600 text-white'
+            : unlocked
+              ? 'border-violet-200 bg-violet-100/80 text-violet-800'
+              : 'border-violet-200 bg-violet-100/80 text-violet-500');
+      }
+    }
+
+    function setGridMapView(mode) {
+      gridMapView = mode;
+      updateGeniusTabButtons();
+      if (gridMapView === 'genius') renderGeniusOrLocked('#gridProgressHost');
+      else renderFullGrid('#gridProgressHost');
+      updateGridSummary();
+      refreshNavButtons();
+    }
+
+    function openGridView() {
+      loadGrid();
+      syncSetsFromGrid();
+      const st = getStats();
+      st.mapOpens++;
+      saveStats(st);
+      if (countGridCellsWithResult() > 0 && st.mapOpens >= 2) awardBadge('mapper');
+
+      refreshTestRangeSelectOptions();
+      refreshPracticeRangeSelectOptions();
+      updateGeniusTabButtons();
+      if (gridMapView === 'genius') renderGeniusOrLocked('#gridProgressHost');
+      else renderFullGrid('#gridProgressHost');
+      updateGridSummary();
+      showView('grid');
+    }
+
+    function buildPad(containerId, mode, opts = {}) {
+      const compact = !!opts.compact;
+      const host = $(containerId);
+      host.innerHTML = '';
+      const digits = ['1','2','3','4','5','6','7','8','9','CLR','0','⌫'];
+      const btnClass = compact
+        ? 'tap rounded-xl border-2 border-violet-200 bg-white py-2 text-lg font-bold leading-none text-violet-900 shadow-sm hover:bg-violet-50 sm:py-2.5 sm:text-xl'
+        : 'tap rounded-2xl border-2 border-violet-200 bg-white py-4 text-2xl font-bold text-violet-900 shadow-sm hover:bg-violet-50';
+      digits.forEach((d) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = btnClass;
+        btn.textContent = d;
+        btn.dataset.mode = mode;
+        if (d === 'CLR') btn.id = 'pad-clear-' + mode;
+        else if (d === '⌫') btn.id = 'pad-back-' + mode;
+        else btn.dataset.digit = d;
+        host.appendChild(btn);
+      });
+    }
+
+    // ---------- Test queue ----------
+    let testRangeSelectsWired = false;
+    let practiceRangeSelectsWired = false;
+    /** 'classic' = 1s–12s map, 'genius' = 13s–20s (×1–12) */
+    let gridMapView = 'classic';
+    let testQueue = [];
+    let testIndex = 0;
+    let testResultsStill = new Set();
+    let testResultsGot = new Set();
+    let testQuestionStart = 0;
+    let testPerQuestionTimer = null;
+    let testFastMs = 4000;
+    let testBuffer = '';
+    let testAwaitingNext = false;
+    let testRangeMin = 1;
+    let testRangeMax = 12;
+    let greensAtTestStart = 0;
+    let testSessionCorrect = 0;
+    let testSessionFast = 0;
+    /** Wall-clock end for timed tests (performance.now()); null = “Until I’m done” */
+    let testSessionEndPerf = null;
+    let testSessionTimerId = null;
+    let testFinishHandled = false;
+    /** Copy of {a,b} pool for rebuilding the queue during timed tests */
+    let testSessionPool = [];
+    let testInitialPoolSize = 0;
+    let testSessionAnswered = 0;
+    /** Shown “Question N” counter during timed tests (does not reset when the queue loops) */
+    let testSessionDisplayNumber = 0;
+
+    function buildQueueForRange(lo, hi) {
+      const pool = [];
+      for (let t = lo; t <= hi; t++) {
+        for (let k = 1; k <= 12; k++) pool.push({ a: t, b: k });
+      }
+      return pool;
+    }
+
+    function clearTestSessionTimer() {
+      if (testSessionTimerId) {
+        clearInterval(testSessionTimerId);
+        testSessionTimerId = null;
+      }
+      testSessionEndPerf = null;
+      const clk = $('#testSessionClock');
+      if (clk) {
+        clk.classList.add('hidden');
+        clk.textContent = '—';
+      }
+    }
+
+    function updateSessionClockUI() {
+      const clk = $('#testSessionClock');
+      if (!clk) return;
+      if (testSessionEndPerf == null) {
+        clk.classList.add('hidden');
+        return;
+      }
+      clk.classList.remove('hidden');
+      const left = testSessionEndPerf - performance.now();
+      if (left <= 0) {
+        clk.textContent = '0:00 left';
+        return;
+      }
+      const s = Math.ceil(left / 1000);
+      const m = Math.floor(s / 60);
+      const r = s % 60;
+      clk.textContent = `${m}:${String(r).padStart(2, '0')} left`;
+    }
+
+    function startSessionClock() {
+      clearTestSessionTimer();
+      const durSec = +document.querySelector('input[name="testDuration"]:checked')?.value || 0;
+      if (durSec <= 0) {
+        testSessionEndPerf = null;
+        updateSessionClockUI();
+        return;
+      }
+      testSessionEndPerf = performance.now() + durSec * 1000;
+      updateSessionClockUI();
+      testSessionTimerId = setInterval(() => {
+        updateSessionClockUI();
+        if (testSessionEndPerf != null && performance.now() >= testSessionEndPerf) {
+          clearTestSessionTimer();
+          clearTestTimers();
+          finishTest();
+        }
+      }, 250);
+    }
+
+    function startTest() {
+      const scope = getTestScope();
+      if (!scope) {
+        alert('Pick what to test first.');
+        return;
+      }
+      let minT = Math.min(+$('#rangeMin').value, +$('#rangeMax').value);
+      let maxT = Math.max(+$('#rangeMin').value, +$('#rangeMax').value);
+      if (scope === 'untested') {
+        minT = 1;
+        maxT = 12;
+      }
+
+      clearTestTimers();
+      clearTestSessionTimer();
+
+      loadGrid();
+      let pool = buildQueueForRange(minT, maxT);
+      if (scope === 'untested') {
+        pool = pool.filter((q) => !grid144[gridOrderedKey(q.a, q.b)]);
+      }
+      if (pool.length === 0) {
+        alert('No questions in this setup — widen the table range or choose “All facts”.');
+        return;
+      }
+
+      persistPlayerName();
+
+      testFinishHandled = false;
+
+      const stStart = getStats();
+      stStart.testsStarted++;
+      saveStats(stStart);
+
+      testRangeMin = minT;
+      testRangeMax = maxT;
+      greensAtTestStart = countGreenCells();
+      testSessionCorrect = 0;
+      testSessionFast = 0;
+
+      testSessionPool = pool.map((q) => ({ a: q.a, b: q.b }));
+      testInitialPoolSize = pool.length;
+      testSessionAnswered = 0;
+      testSessionDisplayNumber = 0;
+
+      testQueue = buildWeightedTestQueue(pool);
+      testIndex = 0;
+      testResultsStill = new Set();
+      testResultsGot = new Set();
+      testFastMs = TEST_FAST_MS;
+      testBuffer = '';
+      testAwaitingNext = false;
+
+      showView('test-run');
+      startSessionClock();
+      showTestQuestion();
+      if (stStart.testsStarted === 1) awardBadge('first_go');
+    }
+
+    function clearTestTimers() {
+      if (testPerQuestionTimer) {
+        clearInterval(testPerQuestionTimer);
+        testPerQuestionTimer = null;
+      }
+    }
+
+    function showTestQuestion() {
+      testAwaitingNext = false;
+      if (testSessionEndPerf != null && performance.now() >= testSessionEndPerf) {
+        clearTestTimers();
+        clearTestSessionTimer();
+        finishTest();
+        return;
+      }
+      if (testIndex >= testQueue.length) {
+        const timed = testSessionEndPerf != null && performance.now() < testSessionEndPerf;
+        if (timed && testSessionPool.length > 0) {
+          testQueue = buildWeightedTestQueue(testSessionPool);
+          testIndex = 0;
+        } else {
+          finishTest();
+          return;
+        }
+      }
+      const q = testQueue[testIndex];
+      const qEl = $('#testQuestion');
+      qEl.textContent = `${q.a} × ${q.b}`;
+      qEl.classList.remove('text-rose-600');
+      qEl.classList.add('text-violet-900');
+      if (testSessionEndPerf != null) {
+        testSessionDisplayNumber++;
+        $('#testProgressLabel').textContent = `Question ${testSessionDisplayNumber}`;
+      } else {
+        $('#testProgressLabel').textContent = `Question ${testIndex + 1} of ${testQueue.length}`;
+      }
+      $('#testAnswerDisplay').textContent = '—';
+      testBuffer = '';
+
+      const limit = testFastMs;
+      testQuestionStart = performance.now();
+
+      let elapsed = 0;
+      let timeWarnShown = false;
+      clearTestTimers();
+      testPerQuestionTimer = setInterval(() => {
+        elapsed += 100;
+        if (!timeWarnShown && elapsed >= QUESTION_WARN_MS) {
+          timeWarnShown = true;
+          qEl.classList.remove('text-violet-900');
+          qEl.classList.add('text-rose-600');
+        }
+        if (elapsed >= limit) {
+          clearInterval(testPerQuestionTimer);
+          testPerQuestionTimer = null;
+          judgeTestAnswer(true, false);
+        }
+      }, 100);
+    }
+
+    function judgeTestAnswer(timedOut, fromSubmit) {
+      if (testAwaitingNext) return;
+      if (testIndex >= testQueue.length) return;
+      testAwaitingNext = true;
+      const q = testQueue[testIndex];
+      const ans = q.a * q.b;
+      const fk = factKey(q.a, q.b);
+      const gk = gridOrderedKey(q.a, q.b);
+      clearTestTimers();
+
+      let parsed = parseInt(testBuffer, 10);
+      const correct = !timedOut && parsed === ans;
+      const elapsed = performance.now() - testQuestionStart;
+      const fastEnough = correct && elapsed <= testFastMs;
+
+      if (correct) {
+        const stLc = getStats();
+        stLc.lifetimeCorrect = (stLc.lifetimeCorrect || 0) + 1;
+        saveStats(stLc);
+        if (stLc.lifetimeCorrect >= 100) awardBadge('math_wizard');
+        testSessionCorrect++;
+        if (elapsed <= SPEEDSTER_MS) testSessionFast++;
+      }
+
+      if (correct && fastEnough) {
+        recordTestFactOutcome(fk, 'ok');
+        grid144[gk] = 'ok';
+        testResultsGot.add(fk);
+        testResultsStill.delete(fk);
+      } else if (correct && !fastEnough) {
+        recordTestFactOutcome(fk, 'slow');
+        grid144[gk] = 'bad';
+        testResultsStill.add(fk);
+        testResultsGot.delete(fk);
+      } else {
+        recordTestFactOutcome(fk, 'miss');
+        grid144[gk] = 'bad';
+        testResultsStill.add(fk);
+        testResultsGot.delete(fk);
+      }
+
+      saveGrid();
+      testIndex++;
+      testSessionAnswered++;
+      requestAnimationFrame(() => showTestQuestion());
+    }
+
+    function finishTest() {
+      if (testFinishHandled) return;
+      testFinishHandled = true;
+      clearTestTimers();
+      clearTestSessionTimer();
+      const st = getStats();
+      st.testsCompleted++;
+      saveStats(st);
+      awardBadge('finisher');
+      if (testResultsStill.size >= 4) awardBadge('brave_try');
+      if (st.testsCompleted >= 2) awardBadge('comeback');
+
+      const answered = testSessionAnswered;
+      if (answered > 0) {
+        if (answered >= 20 && testSessionCorrect / answered >= 0.85) awardBadge('accuracy_ace');
+        if (answered >= 20 && testSessionFast >= 12) awardBadge('speedster');
+        const greensNow = countGreenCells();
+        if (greensNow - greensAtTestStart >= 15) awardBadge('rocket_boost');
+        if (
+          testSessionEndPerf === null &&
+          testRangeMin === 1 &&
+          testRangeMax === 12 &&
+          testInitialPoolSize >= 144 &&
+          answered === testInitialPoolSize &&
+          testSessionCorrect === answered
+        ) {
+          awardBadge('puzzle_solver');
+        }
+      }
+      evaluateGridBadges();
+
+      renderFullGrid();
+      renderResultsLists();
+      showView('test-results');
+      setTimeout(() => flushDeferredBadgeCeremonies(), 0);
+    }
+
+    function renderResultsLists() {
+      const renderPills = (set, ulId, emptyId) => {
+        const ul = $(ulId);
+        const empty = $(emptyId);
+        ul.innerHTML = '';
+        const sorted = [...set].sort();
+        sorted.forEach((key) => {
+          const { display } = parseFactKey(key);
+          const li = document.createElement('li');
+          li.className = 'rounded-full bg-white/80 px-3 py-1 ring-1 ring-current/20';
+          li.textContent = display;
+          ul.appendChild(li);
+        });
+        empty.classList.toggle('hidden', sorted.length > 0);
+      };
+      renderPills(testResultsStill, '#listStill', '#listStillEmpty');
+      renderPills(testResultsGot, '#listGot', '#listGotEmpty');
+    }
+
+    // ---------- Practice ----------
+    function randomPracticeFact() {
+      const mode = getPracticeMode();
+      if (mode === 'still') {
+        const arr = [...stillLearning];
+        if (arr.length === 0) return null;
+        return weightedRandomOne(arr);
+      }
+      const pool = practiceState.tablePoolKeys;
+      if (!pool || pool.length === 0) return null;
+      return weightedRandomOne(pool);
+    }
+
+    function nextPracticeQuestion() {
+      const key = randomPracticeFact();
+      if (!key) {
+        practiceState.current = null;
+        return;
+      }
+      const { a, b } = parseFactKey(key);
+      practiceState.current = { a, b, answer: a * b };
+      $('#practiceQuestion').textContent = `${a} × ${b}`;
+      practiceState.buffer = '';
+      $('#practiceAnswerDisplay').textContent = '—';
+    }
+
+    function celebratePractice() {
+      const pad = $('#pad-practice');
+      const rect = pad.getBoundingClientRect();
+      confetti({
+        particleCount: 80,
+        spread: 65,
+        origin: {
+          x: (rect.left + rect.width / 2) / window.innerWidth,
+          y: (rect.bottom + 40) / window.innerHeight,
+        },
+        colors: ['#7c3aed', '#34d399', '#fbbf24'],
+      });
+    }
+
+    function updatePracticeStreakBar() {
+      const pct = (practiceState.streak % 10) * 10;
+      $('#practiceStreakBar').style.width = pct + '%';
+      if (pct === 0 && practiceState.streak > 0) {
+        practiceState.streak10 += 1;
+        practiceState.score += 10;
+        addLifetimePracticePoints(10);
+        $('#practiceScore').textContent = practiceState.score;
+        celebratePractice();
+      }
+    }
+
+    function judgePractice() {
+      if (!practiceState.running || !practiceState.current) return;
+      const ok = parseInt(practiceState.buffer, 10) === practiceState.current.answer;
+      const fk = factKey(practiceState.current.a, practiceState.current.b);
+      recordPracticeFactOutcome(fk, ok);
+      if (ok) {
+        const pts = 4 + Math.floor(Math.random() * 3);
+        practiceState.score += pts;
+        addLifetimePracticePoints(pts);
+        practiceState.streak++;
+        $('#practiceScore').textContent = practiceState.score;
+        updatePracticeStreakBar();
+      } else {
+        practiceState.streak = 0;
+        $('#practiceStreakBar').style.width = '0%';
+      }
+      nextPracticeQuestion();
+    }
+
+    function startPracticeRound() {
+      const mode = getPracticeMode();
+      if (!mode) return;
+      if (mode === 'still') {
+        if (stillLearning.size === 0) return;
+        practiceState.tablePoolKeys = null;
+      } else if (mode === 'tables') {
+        const lo = Math.min(+$('#practiceRangeFrom').value, +$('#practiceRangeTo').value);
+        const hi = Math.max(+$('#practiceRangeFrom').value, +$('#practiceRangeTo').value);
+        practiceState.tablePoolKeys = factKeysForTableRange(lo, hi);
+        if (practiceState.tablePoolKeys.length === 0) return;
+      } else {
+        return;
+      }
+
+      persistPlayerName();
+
+      practiceState.running = true;
+      $$('input[name="practiceMode"]').forEach((r) => {
+        r.disabled = true;
+      });
+      $$('input[name="practiceDuration"]').forEach((r) => {
+        r.disabled = true;
+      });
+      practiceState.buffer = '';
+      practiceState.score = 0;
+      practiceState.streak = 0;
+      practiceState.streak10 = 0;
+      $('#practiceScore').textContent = '0';
+      $('#practiceStreakBar').style.width = '0%';
+      syncPracticeRunProgress();
+      showView('practice-run');
+      nextPracticeQuestion();
+
+      const totalSec = getPracticeRoundSeconds();
+      let left = totalSec;
+      const tank = $('#practiceTimeTank');
+      $('#practiceTimeLeft').textContent = left;
+      tank.style.width = '100%';
+      if (practiceState.timer) clearInterval(practiceState.timer);
+      practiceState.timer = setInterval(() => {
+        left--;
+        $('#practiceTimeLeft').textContent = left;
+        tank.style.width = (left / totalSec) * 100 + '%';
+        if (left <= 0) {
+          clearInterval(practiceState.timer);
+          practiceState.timer = null;
+          practiceState.running = false;
+          endPracticeRound();
+        }
+      }, 1000);
+    }
+
+    function endPracticeRound() {
+      practiceState.running = false;
+      $$('input[name="practiceMode"]').forEach((r) => {
+        r.disabled = false;
+      });
+      $$('input[name="practiceDuration"]').forEach((r) => {
+        r.disabled = false;
+      });
+      bumpPracticeDayStreak();
+      const st = getStats();
+      st.practiceRounds++;
+      saveStats(st);
+      awardBadge('player');
+
+      persistPlayerName();
+      const name = ($('#playerName') && $('#playerName').value.trim()) || 'You';
+      $('#practiceEndMsg').textContent = `🎉 ${name}, you scored ${practiceState.score} points! Keep going!`;
+      showView('practice-end');
+      setTimeout(() => flushDeferredBadgeCeremonies(), 0);
+    }
+
+    function openPracticeView() {
+      showView('practice-setup');
+    }
+
+    function wirePad(padId, mode, opts) {
+      const host = $(padId);
+      host.addEventListener('pointerup', (e) => {
+        const btn = e.target.closest('button');
+        if (!btn || btn.dataset.mode !== mode) return;
+        if (mode === 'test' && (testAwaitingNext || testIndex > testQueue.length)) return;
+        if (mode === 'practice' && !practiceState.running) return;
+
+        if (btn.dataset.digit != null) {
+          const d = btn.dataset.digit;
+          if (mode === 'test') {
+            testBuffer = (testBuffer + d).slice(0, 4);
+            $('#testAnswerDisplay').textContent = testBuffer;
+            const q = testQueue[testIndex];
+            if (q && testBuffer.length === String(q.a * q.b).length) {
+              setTimeout(() => judgeTestAnswer(false, true), 60);
+            }
+          } else {
+            practiceState.buffer = (practiceState.buffer + d).slice(0, 4);
+            $('#practiceAnswerDisplay').textContent = practiceState.buffer;
+            if (practiceState.current && practiceState.buffer.length === String(practiceState.current.answer).length) {
+              setTimeout(judgePractice, 60);
+            }
+          }
+        } else if (btn.id === 'pad-clear-test' || btn.id === 'pad-clear-practice') {
+          if (mode === 'test') { testBuffer = ''; $('#testAnswerDisplay').textContent = '—'; }
+          else { practiceState.buffer = ''; $('#practiceAnswerDisplay').textContent = '—'; }
+        } else if (btn.id === 'pad-back-test' || btn.id === 'pad-back-practice') {
+          if (mode === 'test') {
+            testBuffer = testBuffer.slice(0, -1);
+            $('#testAnswerDisplay').textContent = testBuffer || '—';
+          } else {
+            practiceState.buffer = practiceState.buffer.slice(0, -1);
+            $('#practiceAnswerDisplay').textContent = practiceState.buffer || '—';
+          }
+        }
+      });
+    }
+
+    window.addEventListener('keydown', (e) => {
+      const ceremonyRoot = $('#badgeCeremonyRoot');
+      if (e.key === 'Escape' && ceremonyRoot && !ceremonyRoot.classList.contains('hidden')) {
+        e.preventDefault();
+        dismissBadgeCeremony();
+        return;
+      }
+      const viewTest = views['test-run'] && views['test-run'].classList.contains('active');
+      const viewPrac =
+        views['practice-run'] && views['practice-run'].classList.contains('active');
+      if (viewTest && !testAwaitingNext && testIndex < testQueue.length) {
+        if (/^[0-9]$/.test(e.key)) {
+          e.preventDefault();
+          testBuffer = (testBuffer + e.key).slice(0, 4);
+          $('#testAnswerDisplay').textContent = testBuffer;
+          const q = testQueue[testIndex];
+          if (q && testBuffer.length === String(q.a * q.b).length) setTimeout(() => judgeTestAnswer(false, true), 60);
+        }
+        if (e.key === 'Backspace') {
+          testBuffer = testBuffer.slice(0, -1);
+          $('#testAnswerDisplay').textContent = testBuffer || '—';
+        }
+        if (e.key === 'Escape') {
+          testBuffer = '';
+          $('#testAnswerDisplay').textContent = '—';
+        }
+      }
+      if (viewPrac && practiceState.running) {
+        if (/^[0-9]$/.test(e.key)) {
+          practiceState.buffer = (practiceState.buffer + e.key).slice(0, 4);
+          $('#practiceAnswerDisplay').textContent = practiceState.buffer;
+          if (practiceState.current && practiceState.buffer.length === String(practiceState.current.answer).length) {
+            setTimeout(judgePractice, 60);
+          }
+        }
+        if (e.key === 'Backspace') {
+          practiceState.buffer = practiceState.buffer.slice(0, -1);
+          $('#practiceAnswerDisplay').textContent = practiceState.buffer || '—';
+        }
+        if (e.key === 'Escape') {
+          practiceState.buffer = '';
+          $('#practiceAnswerDisplay').textContent = '—';
+        }
+      }
+    });
+
+    // ---------- Init ----------
+    function init() {
+      loadFactStats();
+      loadSets();
+      loadEarnedBadges();
+      evaluateGridBadges();
+      updateHomeCounts();
+      updateHomeStreakPanel();
+      updateGeniusTabButtons();
+      loadPlayerNameIntoField();
+      const pn = $('#playerName');
+      if (pn) {
+        pn.addEventListener('input', schedulePersistPlayerName);
+        pn.addEventListener('blur', persistPlayerName);
+      }
+
+      window.addEventListener('storage', (e) => {
+        if (e.key !== LS_NAME) return;
+        const el = $('#playerName');
+        if (el && document.activeElement !== el) loadPlayerNameIntoField();
+      });
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState !== 'hidden') return;
+        if (playerNameDebounceTimer) {
+          clearTimeout(playerNameDebounceTimer);
+          playerNameDebounceTimer = null;
+        }
+        persistPlayerName();
+      });
+
+      refreshHomeLifetimePoints(false);
+
+      initRangeSelects();
+      initPracticeRangeSelects();
+      $$('input[name="practiceMode"]').forEach((r) =>
+        r.addEventListener('change', () => {
+          refreshPracticePanel();
+        })
+      );
+      $('#practiceEmptyPickTablesBtn').addEventListener('click', () => {
+        const tablesRadio = document.querySelector('input[name="practiceMode"][value="tables"]');
+        if (tablesRadio) tablesRadio.checked = true;
+        refreshPracticePanel();
+      });
+      buildPad('#pad-test', 'test', { compact: true });
+      buildPad('#pad-practice', 'practice', { compact: true });
+      wirePad('#pad-test', 'test');
+      wirePad('#pad-practice', 'practice');
+
+      $('#homeBtnTest').addEventListener('click', () => showView('test-setup'));
+      $('#homeBtnPractice').addEventListener('click', () => openPracticeView());
+
+      $$('.nav-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const nav = btn.getAttribute('data-nav');
+          if (nav === 'home') showView('home');
+          else if (nav === 'test-setup') showView('test-setup');
+          else if (nav === 'grid') {
+            gridMapView = 'classic';
+            openGridView();
+          } else if (nav === 'grid-genius') {
+            gridMapView = 'genius';
+            openGridView();
+          } else if (nav === 'practice') openPracticeView();
+        });
+      });
+
+      $('#startTestBtn').addEventListener('click', () => {
+        startTest();
+      });
+
+      $('#resultsPracticeBtn').addEventListener('click', () => openPracticeView());
+      $('#resultsTestAgainBtn').addEventListener('click', () => showView('test-setup'));
+      $('#resultsHomeBtn').addEventListener('click', () => showView('home'));
+
+      $('#gridHomeBtn').addEventListener('click', () => showView('home'));
+      $('#gridTabClassicBtn')?.addEventListener('click', () => setGridMapView('classic'));
+      $('#gridTabGeniusBtn')?.addEventListener('click', () => setGridMapView('genius'));
+
+      $('#practiceEmptyTestBtn').addEventListener('click', () => showView('test-setup'));
+      $('#startPracticeBtn').addEventListener('click', () => startPracticeRound());
+      $('#practiceReplayBtn').addEventListener('click', () => {
+        startPracticeRound();
+      });
+      $('#practiceSetupAgainBtn').addEventListener('click', () => {
+        showView('practice-setup');
+        refreshPracticePanel();
+      });
+      $('#practiceHomeBtn').addEventListener('click', () => showView('home'));
+
+      $('#badgeCeremonyDismiss').addEventListener('click', dismissBadgeCeremony);
+      $('#badgeCeremonyBackdrop').addEventListener('click', dismissBadgeCeremony);
+
+      showView('home');
+    }
+
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
