@@ -89,17 +89,41 @@
       background-image: none;
     }
     /**
-     * One card height everywhere; 30% shorter than full viewport (0.7×) to test fit.
-     * vh / svh = stable mobile viewport
+     * Fill the visible viewport (minus shell padding). Uses dvh when available so
+     * iOS Safari’s toolbar changes don’t strand empty space; svh fallback is conservative.
      */
     #appCard.app-card-height {
-      height: calc(0.7 * (100vh - 1.25rem));
-      max-height: calc(0.7 * (100vh - 1.25rem));
+      height: calc(100svh - 1.25rem);
+      max-height: calc(100svh - 1.25rem);
     }
-    @supports (height: 100svh) {
+    @supports (height: 100dvh) {
       #appCard.app-card-height {
-        height: calc(0.7 * (100svh - 1.25rem));
-        max-height: calc(0.7 * (100svh - 1.25rem));
+        height: calc(100dvh - 1.25rem);
+        max-height: calc(100dvh - 1.25rem);
+      }
+    }
+    /**
+     * Short viewports (landscape tablet, small laptop, Safari with tabs): shrink the
+     * whole card proportionally. `zoom` updates layout size in WebKit/Chromium.
+     */
+    @media (max-height: 880px) {
+      #appCard.app-card-height {
+        zoom: 0.94;
+      }
+    }
+    @media (max-height: 780px) {
+      #appCard.app-card-height {
+        zoom: 0.88;
+      }
+    }
+    @media (max-height: 680px) {
+      #appCard.app-card-height {
+        zoom: 0.82;
+      }
+    }
+    @media (max-height: 600px) {
+      #appCard.app-card-height {
+        zoom: 0.76;
       }
     }
     /** Center app in the viewport; progressive min-height for mobile / desktop */
