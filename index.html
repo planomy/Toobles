@@ -91,77 +91,14 @@
       background-image: none;
     }
     /**
-     * Card height is set in JS to the tallest main view (capped by the shell). Natural
-     * size is auto until measured; use getBoundingClientRect for zoom-aware pixels.
+     * Scale-to-fit: design canvas 1024×720, scaled down with transform (never CSS zoom).
+     * --toobles-scale is unitless, ≤ 1 on shipped layouts.
      */
-    #appCard.app-card-height {
-      height: auto;
-      max-height: 100%;
-      min-height: 0;
+    :root {
+      --toobles-scale: 1;
+      --toobles-base-w: 1024;
+      --toobles-base-h: 720;
     }
-    /** While measuring, hide swaps between views (opacity only — layout unchanged). */
-    #appCard.toobles-sizing {
-      opacity: 0;
-    }
-    /**
-     * iPad Safari: `zoom` from max-height media queries skews measured height vs final
-     * layout; measure passes force zoom: 1, then normal zoom applies to the set px height.
-     */
-    #appCard.toobles-measure-no-zoom.app-card-height {
-      zoom: 1 !important;
-    }
-    /** Unclip home scroll areas so badge shelf contributes to natural height. */
-    #appCard.toobles-measure-home #view-home {
-      flex: none !important;
-      min-height: auto !important;
-      overflow: visible !important;
-    }
-    #appCard.toobles-measure-home #homeScrollClip {
-      flex: none !important;
-      min-height: auto !important;
-      height: auto !important;
-      overflow: visible !important;
-    }
-    #appCard.toobles-measure-home #homeScrollBody {
-      height: auto !important;
-      min-height: auto !important;
-      max-height: none !important;
-      overflow: visible !important;
-    }
-    /**
-     * Short viewports (landscape tablet, small laptop, Safari with tabs): shrink the
-     * whole card proportionally. `zoom` updates layout size in WebKit/Chromium.
-     */
-    @media (max-height: 980px) {
-      #appCard.app-card-height {
-        zoom: 0.94;
-      }
-    }
-    @media (max-height: 880px) {
-      #appCard.app-card-height {
-        zoom: 0.9;
-      }
-    }
-    @media (max-height: 780px) {
-      #appCard.app-card-height {
-        zoom: 0.84;
-      }
-    }
-    @media (max-height: 680px) {
-      #appCard.app-card-height {
-        zoom: 0.78;
-      }
-    }
-    @media (max-height: 600px) {
-      #appCard.app-card-height {
-        zoom: 0.72;
-      }
-    }
-    /**
-     * Shell fills the screen; exact box is driven by `visualViewport` in JS on iOS Safari
-     * so we never exceed the visible viewport (100lvh + overflow-y-hidden was clipping).
-     * Fallback: fixed inset fills the layout viewport before JS runs.
-     */
     #appShellOuter {
       position: fixed;
       z-index: 0;
@@ -176,10 +113,29 @@
       max-height: none;
       display: flex;
       flex-direction: row;
-      align-items: flex-start;
+      align-items: center;
       justify-content: center;
       padding: max(0.375rem, env(safe-area-inset-top)) max(0.5rem, env(safe-area-inset-right))
         max(0.375rem, env(safe-area-inset-bottom)) max(0.5rem, env(safe-area-inset-left));
+    }
+    /** Sized to the scaled footprint so the flex shell can center the app. */
+    #appScaleSlot {
+      position: relative;
+      width: calc(1024px * var(--toobles-scale));
+      height: calc(720px * var(--toobles-scale));
+      flex-shrink: 0;
+    }
+    #appCard {
+      position: absolute;
+      left: 50%;
+      top: 0;
+      width: 1024px;
+      height: 720px;
+      max-width: none;
+      margin-left: -512px;
+      box-sizing: border-box;
+      transform: scale(var(--toobles-scale));
+      transform-origin: top center;
     }
     /** Scrollable panels + shell: no visible scrollbars (touch/wheel scroll still works) */
     #appCard,
@@ -236,24 +192,10 @@
       height: 0 !important;
       background: transparent !important;
     }
-    /** Home: scroll only the tiles/badges — keeps name field out of the overflow box (fixes WebKit scrollbar “nub” on blur) */
-    #homeScrollBody {
+    /** Home: no internal scroll — content lives in the fixed 1024×720 canvas + global scale. */
+    #homeFill {
       scrollbar-width: none;
       -ms-overflow-style: none;
-    }
-    #homeScrollBody::-webkit-scrollbar,
-    #homeScrollBody::-webkit-scrollbar-thumb,
-    #homeScrollBody::-webkit-scrollbar-track,
-    #homeScrollBody::-webkit-scrollbar-corner,
-    #homeScrollBody::-webkit-scrollbar-button {
-      width: 0 !important;
-      height: 0 !important;
-      display: none !important;
-      background: transparent !important;
-    }
-    /** Clip: WebKit can still show overlay thumb; negative margin tucks the bar outside this box */
-    #homeScrollClip {
-      overflow: hidden;
     }
     /** Badge shelf: tooltips are fixed + body-mounted (see renderBadgeShelf) */
     .badge-shelf-tooltip {
@@ -307,9 +249,10 @@
 </head>
 <body class="min-h-0 overflow-x-hidden overflow-y-hidden bg-gradient-to-br from-violet-200/70 via-violet-50 to-amber-50/40 text-violet-950 antialiased">
   <div id="appShellOuter">
+    <div id="appScaleSlot">
     <div
       id="appCard"
-      class="app-card-height flex min-h-0 w-full max-w-5xl flex-col overflow-hidden rounded-[2rem] bg-white/95 shadow-2xl shadow-violet-400/25 ring-1 ring-violet-200/90 backdrop-blur-sm md:flex-row md:items-stretch"
+      class="flex min-h-0 flex-col overflow-hidden rounded-[2rem] bg-white/95 shadow-2xl shadow-violet-400/25 ring-1 ring-violet-200/90 backdrop-blur-sm md:flex-row md:items-stretch"
     >
     <!-- Sidebar -->
     <aside class="flex shrink-0 gap-2 border-b border-violet-100 bg-violet-600 p-3 text-white justify-between md:h-full md:min-h-0 md:w-48 md:shrink-0 md:flex-col md:self-stretch md:justify-start md:border-b-0 md:border-r md:p-4">
@@ -405,11 +348,7 @@
           </div>
         </div>
 
-        <div id="homeScrollClip" class="min-h-0 min-w-0 flex-1">
-        <div
-          id="homeScrollBody"
-          class="box-border flex h-full min-h-0 w-full max-w-full flex-col gap-2 overflow-x-hidden overflow-y-auto overscroll-contain pl-0 pr-4 -mr-4 [scrollbar-width:none] sm:gap-3"
-        >
+        <div id="homeFill" class="flex min-h-0 min-w-0 flex-1 flex-col gap-2 overflow-hidden sm:gap-3">
         <!-- Test/Practice: fixed height 100px -->
         <div class="grid shrink-0 grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3">
           <button
@@ -497,13 +436,12 @@
           </section>
         </div>
 
-        <div class="flex min-w-0 shrink-0 flex-col pt-0.5">
+        <div class="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden pt-0.5">
           <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1.5 sm:gap-x-6 sm:gap-y-2">
             <span class="text-2xl font-bold text-violet-900 md:text-3xl">Your badges</span>
             <span class="text-xl leading-snug text-violet-600 md:text-1xl">Everyone earns something — keep showing up!</span>
           </div>
-          <div id="homeBadgesGrid" class="w-full pb-2 sm:pb-3"></div>
-        </div>
+          <div id="homeBadgesGrid" class="min-h-0 w-full flex-1 pb-1 sm:pb-2"></div>
         </div>
         </div>
       </section>
@@ -856,6 +794,7 @@
         </div>
       </section>
     </main>
+    </div>
     </div>
   </div>
 
@@ -1355,8 +1294,6 @@
       });
     }
 
-    let appCardHeightSyncing = false;
-
     function renderBadgeShelf() {
       ensureBadgeTooltipGlobalDismiss();
       document.querySelectorAll('.badge-shelf-tooltip').forEach((el) => el.remove());
@@ -1394,18 +1331,10 @@
         img.src = `badges/${def.id}.png`;
         img.alt = '';
         img.decoding = 'async';
-        /** Eager: shelf participates in card-height sync; lazy + hidden measure pass often never loads. */
         img.loading = 'eager';
         img.className =
           'pointer-events-none h-full w-full object-cover ' +
           (earned ? '' : 'badge-img-unearned');
-        if (!img.complete) {
-          const bumpCard = () => {
-            if (!appCardHeightSyncing) scheduleAppCardHeight();
-          };
-          img.addEventListener('load', bumpCard, { once: true });
-          img.addEventListener('error', bumpCard, { once: true });
-        }
         btn.appendChild(img);
 
         const tip = document.createElement('div');
@@ -1447,7 +1376,6 @@
         wrap.appendChild(btn);
         host.appendChild(wrap);
       });
-      if (!appCardHeightSyncing) scheduleAppCardHeight();
     }
 
     function gridOrderedKey(a, b) {
@@ -2262,7 +2190,6 @@
       else renderFullGrid('#gridProgressHost');
       updateGridSummary();
       refreshNavButtons();
-      scheduleAppCardHeight();
     }
 
     function openGridView() {
@@ -2280,7 +2207,6 @@
       else renderFullGrid('#gridProgressHost');
       updateGridSummary();
       showView('grid');
-      scheduleAppCardHeight();
     }
 
     function buildPad(containerId, mode, opts = {}) {
@@ -2319,32 +2245,8 @@
     /** 'classic' = 1s–12s map, 'genius' = 13s–20s (×1–12) */
     let gridMapView = 'classic';
 
-    let appCardHeightDebounceTimer = null;
-    function scheduleAppCardHeight() {
-      if (appCardHeightDebounceTimer) clearTimeout(appCardHeightDebounceTimer);
-      appCardHeightDebounceTimer = setTimeout(() => {
-        appCardHeightDebounceTimer = null;
-        requestAnimationFrame(() => void syncAppCardHeight());
-      }, 80);
-    }
-
-    /** Wait for shelf PNGs so height sync isn’t locked before aspect-square cells get intrinsic size. */
-    function waitForBadgeShelfImages() {
-      const host = $('#homeBadgesGrid');
-      if (!host) return Promise.resolve();
-      const imgs = [...host.querySelectorAll('img')];
-      if (!imgs.length) return Promise.resolve();
-      const loads = imgs.map(
-        (im) =>
-          im.complete
-            ? Promise.resolve()
-            : new Promise((resolve) => {
-                im.addEventListener('load', resolve, { once: true });
-                im.addEventListener('error', resolve, { once: true });
-              })
-      );
-      return Promise.race([Promise.all(loads), new Promise((r) => setTimeout(r, 5000))]);
-    }
+    const TOOBLES_BASE_W = 1024;
+    const TOOBLES_BASE_H = 720;
 
     /**
      * Pin the shell to the visual viewport (critical on iPad Safari: layout viewport can
@@ -2374,112 +2276,16 @@
       }
     }
 
-    async function syncAppCardHeight() {
-      const shell = $('#appShellOuter');
-      const card = $('#appCard');
-      if (!shell || !card) return;
-
-      if (appCardHeightDebounceTimer) {
-        clearTimeout(appCardHeightDebounceTimer);
-        appCardHeightDebounceTimer = null;
-      }
-
-      appCardHeightSyncing = true;
-      try {
+    /** Scale-to-fit: use shell inner size (after visualViewport pin). Cap scale at 1. */
+    function updateAppScale() {
       syncShellToVisualViewport();
+      const shell = $('#appShellOuter');
+      if (!shell) return;
       void shell.offsetHeight;
-      const cap = Math.max(1, Math.floor(shell.clientHeight));
-
-      const savedView = currentViewName;
-      const savedGridMode = gridMapView;
-
-      card.classList.add('toobles-sizing', 'toobles-measure-no-zoom');
-      card.style.height = 'auto';
-      card.style.minHeight = '';
-      card.style.maxHeight = '';
-
-      let maxH = 0;
-
-      for (const k of Object.keys(views)) {
-        const el = views[k];
-        if (!el) continue;
-
-        if (k === 'grid') {
-          loadGrid();
-          syncSetsFromGrid();
-          for (const mode of ['classic', 'genius']) {
-            gridMapView = mode;
-            updateGeniusTabButtons();
-            if (mode === 'genius') renderGeniusOrLocked('#gridProgressHost');
-            else renderFullGrid('#gridProgressHost');
-            updateGridSummary();
-            Object.entries(views).forEach(([x, v]) => v && v.classList.toggle('active', x === 'grid'));
-            card.classList.remove('toobles-measure-home');
-            void card.offsetHeight;
-            maxH = Math.max(maxH, Math.ceil(card.getBoundingClientRect().height));
-          }
-          continue;
-        }
-
-        Object.entries(views).forEach(([x, v]) => v && v.classList.toggle('active', x === k));
-        if (k === 'home') {
-          card.classList.add('toobles-measure-home');
-          renderBadgeShelf();
-          await waitForBadgeShelfImages();
-          await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
-          updateHomeStreakPanel();
-          updateHomeCounts();
-          refreshHomeLifetimePoints(false);
-        } else {
-          card.classList.remove('toobles-measure-home');
-        }
-
-        if (k === 'test-setup') {
-          refreshTestRangeSelectOptions();
-          refreshTestSetupUI();
-        }
-        if (k === 'practice-setup') {
-          refreshPracticeRangeSelectOptions();
-          refreshPracticePanel();
-        }
-
-        void card.offsetHeight;
-        maxH = Math.max(maxH, Math.ceil(card.getBoundingClientRect().height));
-      }
-
-      gridMapView = savedGridMode;
-      updateGeniusTabButtons();
-      if (gridMapView === 'genius') renderGeniusOrLocked('#gridProgressHost');
-      else renderFullGrid('#gridProgressHost');
-      updateGridSummary();
-
-      card.classList.remove('toobles-measure-home');
-      Object.entries(views).forEach(([x, v]) => v && v.classList.toggle('active', x === savedView));
-      refreshNavButtons();
-
-      const natural = maxH > 0 ? maxH : cap;
-      let target = Math.min(natural, cap);
-
-      card.classList.remove('toobles-measure-no-zoom');
-      if (savedView === 'home') {
-        card.style.height = 'auto';
-        card.style.minHeight = '';
-        card.style.maxHeight = '';
-        void card.offsetHeight;
-        const need = Math.ceil(card.getBoundingClientRect().height);
-        target = Math.min(Math.max(target, need), cap);
-      }
-
-      card.style.height = `${target}px`;
-      card.style.minHeight = `${target}px`;
-      card.style.maxHeight = `${cap}px`;
-      } finally {
-        appCardHeightSyncing = false;
-        if (card) {
-          card.classList.remove('toobles-measure-no-zoom');
-          card.classList.remove('toobles-sizing');
-        }
-      }
+      const availW = Math.max(1, shell.clientWidth);
+      const availH = Math.max(1, shell.clientHeight);
+      const scale = Math.min(availW / TOOBLES_BASE_W, availH / TOOBLES_BASE_H, 1);
+      document.documentElement.style.setProperty('--toobles-scale', String(scale));
     }
 
     let testQueue = [];
@@ -3098,22 +2904,24 @@
 
       showView('home');
 
-      syncShellToVisualViewport();
-
-      let resizeCardTimer = null;
-      const bumpCardLayout = () => {
+      let scaleDebounceTimer = null;
+      const bumpAppScale = () => {
         syncShellToVisualViewport();
-        if (resizeCardTimer) clearTimeout(resizeCardTimer);
-        resizeCardTimer = setTimeout(() => scheduleAppCardHeight(), 200);
+        updateAppScale();
+        if (scaleDebounceTimer) clearTimeout(scaleDebounceTimer);
+        scaleDebounceTimer = setTimeout(() => {
+          scaleDebounceTimer = null;
+          updateAppScale();
+        }, 120);
       };
-      window.addEventListener('resize', bumpCardLayout);
-      window.visualViewport?.addEventListener('resize', bumpCardLayout);
+      window.addEventListener('resize', bumpAppScale);
+      window.visualViewport?.addEventListener('resize', bumpAppScale);
       /** iOS: offsetTop/Left change when the visual viewport pans; size usually unchanged. */
       window.visualViewport?.addEventListener('scroll', () => syncShellToVisualViewport());
-      if (document.fonts?.ready) document.fonts.ready.then(() => scheduleAppCardHeight());
-      window.addEventListener('load', () => scheduleAppCardHeight(), { once: true });
+      if (document.fonts?.ready) document.fonts.ready.then(() => updateAppScale());
+      window.addEventListener('load', () => updateAppScale(), { once: true });
 
-      requestAnimationFrame(() => void syncAppCardHeight());
+      requestAnimationFrame(() => updateAppScale());
     }
 
     window.addEventListener('DOMContentLoaded', init);
