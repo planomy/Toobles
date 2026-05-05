@@ -30,6 +30,7 @@
     html {
       height: 100%;
       min-height: 100vh;
+      min-height: -webkit-fill-available;
       min-height: 100dvh;
       min-height: 100svh;
       scrollbar-width: none;
@@ -42,6 +43,7 @@
     }
     body {
       min-height: 100vh;
+      min-height: -webkit-fill-available;
       min-height: 100dvh;
       min-height: 100svh;
       font-family: Fredoka, system-ui, sans-serif;
@@ -169,6 +171,16 @@
       #appShellOuter {
         height: 100dvh;
         max-height: 100dvh;
+      }
+    }
+    /**
+     * iPad / iOS Safari: `dvh` can leave a visible band below the shell while content
+     * clips. `lvh` tracks the large viewport so more of the screen is usable.
+     */
+    @supports (height: 100lvh) {
+      #appShellOuter {
+        height: 100lvh;
+        max-height: 100lvh;
       }
     }
     /** Scrollable panels + shell: no visible scrollbars (touch/wheel scroll still works) */
@@ -2336,6 +2348,20 @@
       return Promise.race([Promise.all(loads), new Promise((r) => setTimeout(r, 5000))]);
     }
 
+    /** When CSS viewport units are shorter than the visual viewport (iPad Safari), grow the shell. */
+    function syncShellMinToVisualViewport() {
+      const shell = $('#appShellOuter');
+      if (!shell || !window.visualViewport) return;
+      const vh = window.visualViewport.height;
+      if (!(vh > 0)) return;
+      const sh = shell.getBoundingClientRect().height;
+      if (vh - sh > 4) {
+        shell.style.minHeight = `${Math.ceil(vh)}px`;
+      } else {
+        shell.style.minHeight = '';
+      }
+    }
+
     async function syncAppCardHeight() {
       const shell = $('#appShellOuter');
       const card = $('#appCard');
@@ -2348,7 +2374,9 @@
 
       appCardHeightSyncing = true;
       try {
-      const cap = Math.max(1, Math.floor(shell.getBoundingClientRect().height));
+      syncShellMinToVisualViewport();
+      void shell.offsetHeight;
+      const cap = Math.max(1, Math.floor(shell.clientHeight));
 
       const savedView = currentViewName;
       const savedGridMode = gridMapView;
@@ -3045,10 +3073,12 @@
       showView('home');
 
       let resizeCardTimer = null;
-      window.addEventListener('resize', () => {
+      const bumpCardLayout = () => {
         if (resizeCardTimer) clearTimeout(resizeCardTimer);
         resizeCardTimer = setTimeout(() => scheduleAppCardHeight(), 200);
-      });
+      };
+      window.addEventListener('resize', bumpCardLayout);
+      window.visualViewport?.addEventListener('resize', bumpCardLayout);
       if (document.fonts?.ready) document.fonts.ready.then(() => scheduleAppCardHeight());
       window.addEventListener('load', () => scheduleAppCardHeight(), { once: true });
 
