@@ -103,6 +103,13 @@
     #appCard.toobles-sizing {
       opacity: 0;
     }
+    /**
+     * iPad Safari: `zoom` from max-height media queries skews measured height vs final
+     * layout; measure passes force zoom: 1, then normal zoom applies to the set px height.
+     */
+    #appCard.toobles-measure-no-zoom.app-card-height {
+      zoom: 1 !important;
+    }
     /** Unclip home scroll areas so badge shelf contributes to natural height. */
     #appCard.toobles-measure-home #view-home {
       flex: none !important;
@@ -2386,7 +2393,7 @@
       const savedView = currentViewName;
       const savedGridMode = gridMapView;
 
-      card.classList.add('toobles-sizing');
+      card.classList.add('toobles-sizing', 'toobles-measure-no-zoom');
       card.style.height = 'auto';
       card.style.minHeight = '';
       card.style.maxHeight = '';
@@ -2419,6 +2426,7 @@
           card.classList.add('toobles-measure-home');
           renderBadgeShelf();
           await waitForBadgeShelfImages();
+          await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
           updateHomeStreakPanel();
           updateHomeCounts();
           refreshHomeLifetimePoints(false);
@@ -2450,14 +2458,27 @@
       refreshNavButtons();
 
       const natural = maxH > 0 ? maxH : cap;
-      const target = Math.min(natural, cap);
+      let target = Math.min(natural, cap);
+
+      card.classList.remove('toobles-measure-no-zoom');
+      if (savedView === 'home') {
+        card.style.height = 'auto';
+        card.style.minHeight = '';
+        card.style.maxHeight = '';
+        void card.offsetHeight;
+        const need = Math.ceil(card.getBoundingClientRect().height);
+        target = Math.min(Math.max(target, need), cap);
+      }
+
       card.style.height = `${target}px`;
       card.style.minHeight = `${target}px`;
       card.style.maxHeight = `${cap}px`;
-
-      card.classList.remove('toobles-sizing');
       } finally {
         appCardHeightSyncing = false;
+        if (card) {
+          card.classList.remove('toobles-measure-no-zoom');
+          card.classList.remove('toobles-sizing');
+        }
       }
     }
 
