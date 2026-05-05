@@ -89,48 +89,65 @@
       background-image: none;
     }
     /**
-     * Fill the visible viewport (minus shell padding). Uses dvh when available so
-     * iOS Safari’s toolbar changes don’t strand empty space; svh fallback is conservative.
+     * Card fills #appShellOuter (viewport minus shell padding). Don’t set a fixed vh
+     * height here — that fought zoom + vertical centering and left lavender bands on iPad.
      */
     #appCard.app-card-height {
-      height: calc(100svh - 1.25rem);
-      max-height: calc(100svh - 1.25rem);
-    }
-    @supports (height: 100dvh) {
-      #appCard.app-card-height {
-        height: calc(100dvh - 1.25rem);
-        max-height: calc(100dvh - 1.25rem);
-      }
+      height: 100%;
+      max-height: 100%;
+      min-height: 0;
     }
     /**
      * Short viewports (landscape tablet, small laptop, Safari with tabs): shrink the
      * whole card proportionally. `zoom` updates layout size in WebKit/Chromium.
      */
-    @media (max-height: 880px) {
+    @media (max-height: 980px) {
       #appCard.app-card-height {
         zoom: 0.94;
       }
     }
+    @media (max-height: 880px) {
+      #appCard.app-card-height {
+        zoom: 0.9;
+      }
+    }
     @media (max-height: 780px) {
       #appCard.app-card-height {
-        zoom: 0.88;
+        zoom: 0.84;
       }
     }
     @media (max-height: 680px) {
       #appCard.app-card-height {
-        zoom: 0.82;
+        zoom: 0.78;
       }
     }
     @media (max-height: 600px) {
       #appCard.app-card-height {
-        zoom: 0.76;
+        zoom: 0.72;
       }
     }
-    /** Center app in the viewport; progressive min-height for mobile / desktop */
+    /**
+     * Exact viewport height + stretch children vertically (no items-center letterboxing).
+     * Horizontal centering only; safe-area insets for notched iPads.
+     */
     #appShellOuter {
-      min-height: 100vh;
-      min-height: 100dvh;
-      min-height: 100svh;
+      box-sizing: border-box;
+      width: 100%;
+      height: 100svh;
+      max-height: 100svh;
+      min-height: 0;
+      display: flex;
+      flex-direction: row;
+      align-items: stretch;
+      justify-content: center;
+      padding: max(0.375rem, env(safe-area-inset-top)) max(0.5rem, env(safe-area-inset-right))
+        max(0.375rem, env(safe-area-inset-bottom)) max(0.5rem, env(safe-area-inset-left));
+    }
+    @supports (height: 100dvh) {
+      #appShellOuter {
+        height: 100dvh;
+        max-height: 100dvh;
+      }
     }
     /** Scrollable panels + shell: no visible scrollbars (touch/wheel scroll still works) */
     #appCard,
@@ -257,8 +274,11 @@
   </style>
 </head>
 <body class="min-h-0 overflow-x-hidden overflow-y-hidden bg-gradient-to-br from-violet-200/70 via-violet-50 to-amber-50/40 text-violet-950 antialiased">
-  <div id="appShellOuter" class="box-border flex w-full items-center justify-center p-2 sm:p-3">
-    <div id="appCard" class="app-card-height flex min-h-0 w-full max-w-5xl flex-col overflow-hidden rounded-[2rem] bg-white/95 shadow-2xl shadow-violet-400/25 ring-1 ring-violet-200/90 backdrop-blur-sm md:flex-row md:items-stretch">
+  <div id="appShellOuter">
+    <div
+      id="appCard"
+      class="app-card-height flex min-h-0 w-full max-w-5xl flex-col overflow-hidden rounded-[2rem] bg-white/95 shadow-2xl shadow-violet-400/25 ring-1 ring-violet-200/90 backdrop-blur-sm md:flex-row md:items-stretch"
+    >
     <!-- Sidebar -->
     <aside class="flex shrink-0 gap-2 border-b border-violet-100 bg-violet-600 p-3 text-white justify-between md:h-full md:min-h-0 md:w-48 md:shrink-0 md:flex-col md:self-stretch md:justify-start md:border-b-0 md:border-r md:p-4">
       <div>
