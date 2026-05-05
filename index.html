@@ -89,13 +89,35 @@
       background-image: none;
     }
     /**
-     * Card fills #appShellOuter (viewport minus shell padding). Don’t set a fixed vh
-     * height here — that fought zoom + vertical centering and left lavender bands on iPad.
+     * Card height is set in JS to the tallest main view (capped by the shell). Natural
+     * size is auto until measured; use getBoundingClientRect for zoom-aware pixels.
      */
     #appCard.app-card-height {
-      height: 100%;
+      height: auto;
       max-height: 100%;
       min-height: 0;
+    }
+    /** While measuring, hide swaps between views (opacity only — layout unchanged). */
+    #appCard.toobles-sizing {
+      opacity: 0;
+    }
+    /** Unclip home scroll areas so badge shelf contributes to natural height. */
+    #appCard.toobles-measure-home #view-home {
+      flex: none !important;
+      min-height: auto !important;
+      overflow: visible !important;
+    }
+    #appCard.toobles-measure-home #homeScrollClip {
+      flex: none !important;
+      min-height: auto !important;
+      height: auto !important;
+      overflow: visible !important;
+    }
+    #appCard.toobles-measure-home #homeScrollBody {
+      height: auto !important;
+      min-height: auto !important;
+      max-height: none !important;
+      overflow: visible !important;
     }
     /**
      * Short viewports (landscape tablet, small laptop, Safari with tabs): shrink the
@@ -127,8 +149,8 @@
       }
     }
     /**
-     * Exact viewport height + stretch children vertically (no items-center letterboxing).
-     * Horizontal centering only; safe-area insets for notched iPads.
+     * Viewport-sized shell; card is not stretched — JS assigns a unified height from the
+     * tallest view. Horizontal centering; safe-area insets for notched iPads.
      */
     #appShellOuter {
       box-sizing: border-box;
@@ -138,7 +160,7 @@
       min-height: 0;
       display: flex;
       flex-direction: row;
-      align-items: stretch;
+      align-items: flex-start;
       justify-content: center;
       padding: max(0.375rem, env(safe-area-inset-top)) max(0.5rem, env(safe-area-inset-right))
         max(0.375rem, env(safe-area-inset-bottom)) max(0.5rem, env(safe-area-inset-left));
@@ -1323,6 +1345,8 @@
       });
     }
 
+    let appCardHeightSyncing = false;
+
     function renderBadgeShelf() {
       ensureBadgeTooltipGlobalDismiss();
       document.querySelectorAll('.badge-shelf-tooltip').forEach((el) => el.remove());
@@ -1360,10 +1384,18 @@
         img.src = `badges/${def.id}.png`;
         img.alt = '';
         img.decoding = 'async';
-        img.loading = 'lazy';
+        /** Eager: shelf participates in card-height sync; lazy + hidden measure pass often never loads. */
+        img.loading = 'eager';
         img.className =
           'pointer-events-none h-full w-full object-cover ' +
           (earned ? '' : 'badge-img-unearned');
+        if (!img.complete) {
+          const bumpCard = () => {
+            if (!appCardHeightSyncing) scheduleAppCardHeight();
+          };
+          img.addEventListener('load', bumpCard, { once: true });
+          img.addEventListener('error', bumpCard, { once: true });
+        }
         btn.appendChild(img);
 
         const tip = document.createElement('div');
@@ -1405,6 +1437,7 @@
         wrap.appendChild(btn);
         host.appendChild(wrap);
       });
+      if (!appCardHeightSyncing) scheduleAppCardHeight();
     }
 
     function gridOrderedKey(a, b) {
@@ -1660,6 +1693,9 @@
       'practice-end': $('#view-practice-end'),
     };
 
+    /** Kept in sync with `showView` for layout measurement (don’t infer from DOM during sizing). */
+    let currentViewName = 'home';
+
     function refreshNavButtons() {
       const activeSection = document.querySelector('section.view.active');
       const viewName = activeSection ? activeSection.id.replace('view-', '') : 'home';
@@ -1688,6 +1724,8 @@
     }
 
     function showView(name) {
+      if (!views[name]) return;
+      currentViewName = name;
       if (name !== 'test-run') clearTestTimers();
       if (name !== 'practice-run' && practiceState.timer) {
         clearInterval(practiceState.timer);
@@ -2214,6 +2252,7 @@
       else renderFullGrid('#gridProgressHost');
       updateGridSummary();
       refreshNavButtons();
+      scheduleAppCardHeight();
     }
 
     function openGridView() {
@@ -2231,6 +2270,7 @@
       else renderFullGrid('#gridProgressHost');
       updateGridSummary();
       showView('grid');
+      scheduleAppCardHeight();
     }
 
     function buildPad(containerId, mode, opts = {}) {
@@ -2268,6 +2308,126 @@
     let practiceRangeSelectsWired = false;
     /** 'classic' = 1s–12s map, 'genius' = 13s–20s (×1–12) */
     let gridMapView = 'classic';
+
+    let appCardHeightDebounceTimer = null;
+    function scheduleAppCardHeight() {
+      if (appCardHeightDebounceTimer) clearTimeout(appCardHeightDebounceTimer);
+      appCardHeightDebounceTimer = setTimeout(() => {
+        appCardHeightDebounceTimer = null;
+        requestAnimationFrame(() => void syncAppCardHeight());
+      }, 80);
+    }
+
+    /** Wait for shelf PNGs so height sync isn’t locked before aspect-square cells get intrinsic size. */
+    function waitForBadgeShelfImages() {
+      const host = $('#homeBadgesGrid');
+      if (!host) return Promise.resolve();
+      const imgs = [...host.querySelectorAll('img')];
+      if (!imgs.length) return Promise.resolve();
+      const loads = imgs.map(
+        (im) =>
+          im.complete
+            ? Promise.resolve()
+            : new Promise((resolve) => {
+                im.addEventListener('load', resolve, { once: true });
+                im.addEventListener('error', resolve, { once: true });
+              })
+      );
+      return Promise.race([Promise.all(loads), new Promise((r) => setTimeout(r, 5000))]);
+    }
+
+    async function syncAppCardHeight() {
+      const shell = $('#appShellOuter');
+      const card = $('#appCard');
+      if (!shell || !card) return;
+
+      if (appCardHeightDebounceTimer) {
+        clearTimeout(appCardHeightDebounceTimer);
+        appCardHeightDebounceTimer = null;
+      }
+
+      appCardHeightSyncing = true;
+      try {
+      const cap = Math.max(1, Math.floor(shell.getBoundingClientRect().height));
+
+      const savedView = currentViewName;
+      const savedGridMode = gridMapView;
+
+      card.classList.add('toobles-sizing');
+      card.style.height = 'auto';
+      card.style.minHeight = '';
+      card.style.maxHeight = '';
+
+      let maxH = 0;
+
+      for (const k of Object.keys(views)) {
+        const el = views[k];
+        if (!el) continue;
+
+        if (k === 'grid') {
+          loadGrid();
+          syncSetsFromGrid();
+          for (const mode of ['classic', 'genius']) {
+            gridMapView = mode;
+            updateGeniusTabButtons();
+            if (mode === 'genius') renderGeniusOrLocked('#gridProgressHost');
+            else renderFullGrid('#gridProgressHost');
+            updateGridSummary();
+            Object.entries(views).forEach(([x, v]) => v && v.classList.toggle('active', x === 'grid'));
+            card.classList.remove('toobles-measure-home');
+            void card.offsetHeight;
+            maxH = Math.max(maxH, Math.ceil(card.getBoundingClientRect().height));
+          }
+          continue;
+        }
+
+        Object.entries(views).forEach(([x, v]) => v && v.classList.toggle('active', x === k));
+        if (k === 'home') {
+          card.classList.add('toobles-measure-home');
+          renderBadgeShelf();
+          await waitForBadgeShelfImages();
+          updateHomeStreakPanel();
+          updateHomeCounts();
+          refreshHomeLifetimePoints(false);
+        } else {
+          card.classList.remove('toobles-measure-home');
+        }
+
+        if (k === 'test-setup') {
+          refreshTestRangeSelectOptions();
+          refreshTestSetupUI();
+        }
+        if (k === 'practice-setup') {
+          refreshPracticeRangeSelectOptions();
+          refreshPracticePanel();
+        }
+
+        void card.offsetHeight;
+        maxH = Math.max(maxH, Math.ceil(card.getBoundingClientRect().height));
+      }
+
+      gridMapView = savedGridMode;
+      updateGeniusTabButtons();
+      if (gridMapView === 'genius') renderGeniusOrLocked('#gridProgressHost');
+      else renderFullGrid('#gridProgressHost');
+      updateGridSummary();
+
+      card.classList.remove('toobles-measure-home');
+      Object.entries(views).forEach(([x, v]) => v && v.classList.toggle('active', x === savedView));
+      refreshNavButtons();
+
+      const natural = maxH > 0 ? maxH : cap;
+      const target = Math.min(natural, cap);
+      card.style.height = `${target}px`;
+      card.style.minHeight = `${target}px`;
+      card.style.maxHeight = `${cap}px`;
+
+      card.classList.remove('toobles-sizing');
+      } finally {
+        appCardHeightSyncing = false;
+      }
+    }
+
     let testQueue = [];
     let testIndex = 0;
     let testResultsStill = new Set();
@@ -2883,6 +3043,16 @@
       $('#badgeCeremonyBackdrop').addEventListener('click', dismissBadgeCeremony);
 
       showView('home');
+
+      let resizeCardTimer = null;
+      window.addEventListener('resize', () => {
+        if (resizeCardTimer) clearTimeout(resizeCardTimer);
+        resizeCardTimer = setTimeout(() => scheduleAppCardHeight(), 200);
+      });
+      if (document.fonts?.ready) document.fonts.ready.then(() => scheduleAppCardHeight());
+      window.addEventListener('load', () => scheduleAppCardHeight(), { once: true });
+
+      requestAnimationFrame(() => void syncAppCardHeight());
     }
 
     window.addEventListener('DOMContentLoaded', init);
