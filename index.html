@@ -531,6 +531,31 @@
           </div>
         </fieldset>
 
+        <fieldset
+          id="testSetupQuestionTimeWrap"
+          class="hidden mb-4 rounded-2xl border border-violet-100 bg-gradient-to-r from-violet-50 to-indigo-50/80 px-3 py-3 shadow-inner shadow-violet-100/50 ring-1 ring-violet-100/60 sm:mb-6 sm:px-4 sm:py-4"
+        >
+          <legend class="px-1 text-xs font-bold uppercase tracking-wide text-violet-500">Time for each question</legend>
+          <div class="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <label class="flex cursor-pointer items-center justify-center rounded-xl bg-white/80 px-2 py-2.5 text-center text-xs font-semibold text-violet-900 ring-1 ring-violet-100 hover:bg-white has-[:checked]:bg-white has-[:checked]:ring-2 has-[:checked]:ring-violet-500 sm:text-sm">
+              <input type="radio" name="testQuestionTime" value="3000" class="sr-only" />
+              <span>3 seconds</span>
+            </label>
+            <label class="flex cursor-pointer items-center justify-center rounded-xl bg-white/80 px-2 py-2.5 text-center text-xs font-semibold text-violet-900 ring-1 ring-violet-100 hover:bg-white has-[:checked]:bg-white has-[:checked]:ring-2 has-[:checked]:ring-violet-500 sm:text-sm">
+              <input type="radio" name="testQuestionTime" value="5000" checked class="sr-only" />
+              <span>5 seconds</span>
+            </label>
+            <label class="flex cursor-pointer items-center justify-center rounded-xl bg-white/80 px-2 py-2.5 text-center text-xs font-semibold text-violet-900 ring-1 ring-violet-100 hover:bg-white has-[:checked]:bg-white has-[:checked]:ring-2 has-[:checked]:ring-violet-500 sm:text-sm">
+              <input type="radio" name="testQuestionTime" value="10000" class="sr-only" />
+              <span>10 seconds</span>
+            </label>
+            <label class="flex cursor-pointer items-center justify-center rounded-xl bg-white/80 px-2 py-2.5 text-center text-xs font-semibold text-violet-900 ring-1 ring-violet-100 hover:bg-white has-[:checked]:bg-white has-[:checked]:ring-2 has-[:checked]:ring-violet-500 sm:text-sm">
+              <input type="radio" name="testQuestionTime" value="0" class="sr-only" />
+              <span>No timer</span>
+            </label>
+          </div>
+        </fieldset>
+
         <p id="testSetupUntestedZero" class="hidden mb-3 text-center text-sm leading-snug text-violet-600 sm:mb-4"></p>
 
         <button type="button" id="startTestBtn" class="hidden w-full rounded-2xl bg-violet-600 py-3.5 text-base font-bold text-white shadow-lg hover:bg-violet-500 active:bg-violet-700 sm:py-4 sm:text-lg">
@@ -562,7 +587,7 @@
       <!-- Test: results -->
       <section id="view-test-results" class="view min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <h2 class="text-2xl font-bold text-violet-900 mb-2">Your times-table map</h2>
-        <p class="text-violet-600 text-sm mb-4">This map is saved on your device. <span class="inline-flex items-center gap-1"><span class="inline-block h-3 w-3 rounded bg-emerald-400"></span> green</span> = correct in time, <span class="inline-flex items-center gap-1"><span class="inline-block h-3 w-3 rounded bg-rose-400"></span> red</span> = needs work, plain = not tested yet.</p>
+        <p class="text-violet-600 text-sm mb-4">This map is saved on your device. <span class="inline-flex items-center gap-1"><span class="inline-block h-3 w-3 rounded bg-emerald-400"></span> green</span> = correct, <span class="inline-flex items-center gap-1"><span class="inline-block h-3 w-3 rounded bg-rose-400"></span> red</span> = needs work, plain = not tested yet.</p>
 
         <div class="mb-8 overflow-x-auto rounded-2xl border border-violet-100 bg-violet-50/50 p-3 shadow-inner">
           <div id="resultsGridHost" class="min-w-[340px] sm:min-w-[420px] md:min-w-0"></div>
@@ -594,7 +619,7 @@
       <!-- Progress map (anytime) -->
       <section id="view-grid" class="view overflow-y-auto overscroll-contain">
         <h2 class="text-2xl font-bold text-violet-900 mb-2">My times-table map</h2>
-        <p class="text-violet-600 text-sm mb-3">Saved on this device. <span class="inline-flex items-center gap-1"><span class="inline-block h-3 w-3 rounded bg-emerald-400"></span> green</span> = correct in time on a test, <span class="inline-flex items-center gap-1"><span class="inline-block h-3 w-3 rounded bg-rose-400"></span> red</span> = needs work, plain = not tested yet.</p>
+        <p class="text-violet-600 text-sm mb-3">Saved on this device. <span class="inline-flex items-center gap-1"><span class="inline-block h-3 w-3 rounded bg-emerald-400"></span> green</span> = correct on a test, <span class="inline-flex items-center gap-1"><span class="inline-block h-3 w-3 rounded bg-rose-400"></span> red</span> = needs work, plain = not tested yet.</p>
         <p id="gridSummaryCounts" class="text-sm font-semibold text-violet-800 mb-3 rounded-xl bg-violet-50 px-4 py-2 ring-1 ring-violet-100"></p>
 
         <div class="mb-3 flex flex-wrap gap-2" role="tablist" aria-label="Map view">
@@ -908,10 +933,6 @@
       }
     }
 
-    /** Fixed “fast enough” time — same for everyone */
-    const TEST_FAST_MS = 4000;
-    /** Question turns red at this mark (2s in → 2s left on a 4s limit) */
-    const QUESTION_WARN_MS = 2000;
     /** Correct answers this fast in one test count toward Speedster */
     const SPEEDSTER_MS = 2500;
     /** Step-by-step test / practice setup */
@@ -1784,6 +1805,7 @@
       const scope = getTestScope();
       const rangeWrap = $('#testSetupRangeWrap');
       const durWrap = $('#testSetupDurationWrap');
+      const questionTimeWrap = $('#testSetupQuestionTimeWrap');
       const startBtn = $('#startTestBtn');
       const untestedZero = $('#testSetupUntestedZero');
 
@@ -1799,12 +1821,14 @@
       if (!scope) {
         rangeWrap?.classList.add('hidden');
         durWrap?.classList.add('hidden');
+        questionTimeWrap?.classList.add('hidden');
         startBtn?.classList.add('hidden');
         untestedZero?.classList.add('hidden');
         return;
       }
 
       durWrap?.classList.remove('hidden');
+      questionTimeWrap?.classList.remove('hidden');
       startBtn?.classList.remove('hidden');
 
       if (scope === 'untested') {
@@ -2299,7 +2323,8 @@
     let testResultsGot = new Set();
     let testQuestionStart = 0;
     let testPerQuestionTimer = null;
-    let testFastMs = 4000;
+    /** Per-question limit in milliseconds; 0 means no timer. */
+    let testFastMs = 5000;
     let testBuffer = '';
     let testAwaitingNext = false;
     let testRangeMin = 1;
@@ -2427,7 +2452,7 @@
       testIndex = 0;
       testResultsStill = new Set();
       testResultsGot = new Set();
-      testFastMs = TEST_FAST_MS;
+      testFastMs = +document.querySelector('input[name="testQuestionTime"]:checked')?.value || 0;
       testBuffer = '';
       testAwaitingNext = false;
 
@@ -2478,22 +2503,25 @@
       const limit = testFastMs;
       testQuestionStart = performance.now();
 
-      let elapsed = 0;
-      let timeWarnShown = false;
       clearTestTimers();
-      testPerQuestionTimer = setInterval(() => {
-        elapsed += 100;
-        if (!timeWarnShown && elapsed >= QUESTION_WARN_MS) {
-          timeWarnShown = true;
-          qEl.classList.remove('text-violet-900');
-          qEl.classList.add('text-rose-600');
-        }
-        if (elapsed >= limit) {
-          clearInterval(testPerQuestionTimer);
-          testPerQuestionTimer = null;
-          judgeTestAnswer(true, false);
-        }
-      }, 100);
+      if (limit > 0) {
+        let elapsed = 0;
+        let timeWarnShown = false;
+        const warningAt = Math.max(1000, limit - 2000);
+        testPerQuestionTimer = setInterval(() => {
+          elapsed += 100;
+          if (!timeWarnShown && elapsed >= warningAt) {
+            timeWarnShown = true;
+            qEl.classList.remove('text-violet-900');
+            qEl.classList.add('text-rose-600');
+          }
+          if (elapsed >= limit) {
+            clearInterval(testPerQuestionTimer);
+            testPerQuestionTimer = null;
+            judgeTestAnswer(true, false);
+          }
+        }, 100);
+      }
     }
 
     function judgeTestAnswer(timedOut, fromSubmit) {
@@ -2509,7 +2537,7 @@
       let parsed = parseInt(testBuffer, 10);
       const correct = !timedOut && parsed === ans;
       const elapsed = performance.now() - testQuestionStart;
-      const fastEnough = correct && elapsed <= testFastMs;
+      const fastEnough = correct && (testFastMs === 0 || elapsed <= testFastMs);
 
       if (correct) {
         const stLc = getStats();
