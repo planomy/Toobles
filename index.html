@@ -290,9 +290,25 @@
       transform: scale(1.08);
       box-shadow: 0 4px 12px rgba(52, 211, 153, 0.3);
     }
+    .cm-highlight-add-top {
+      background: #fb923c !important;
+      color: white !important;
+      transform: scale(1.06);
+      box-shadow: 0 4px 12px rgba(251, 146, 60, 0.3);
+    }
+    .cm-highlight-add-bottom {
+      background: #34d399 !important;
+      color: #064e3b !important;
+      transform: scale(1.06);
+      box-shadow: 0 4px 12px rgba(52, 211, 153, 0.3);
+    }
+    .cm-answer-box {
+      background: #f5f3ff;
+      box-shadow: inset 0 0 0 2px #8b5cf6;
+    }
     .cm-target {
       background: #ede9fe;
-      box-shadow: inset 0 0 0 2px #8b5cf6;
+      box-shadow: inset 0 0 0 3px #7c3aed, 0 3px 10px rgba(124, 58, 237, 0.2);
     }
     .cm-rule {
       grid-column: 1 / -1;
@@ -305,7 +321,7 @@
       0%, 100% { transform: translateY(3px); }
       50% { transform: translateY(-4px); }
     }
-    .cm-zero-hint {
+    .cm-action-hint {
       display: grid;
       grid-template-columns: 2rem repeat(5, 3rem);
       justify-content: center;
@@ -314,14 +330,14 @@
       color: #dc2626;
       animation: cm-zero-bounce 0.85s ease-in-out infinite;
     }
-    .cm-zero-arrow {
+    .cm-action-arrow {
       grid-column: 6;
       display: flex;
       height: 1.8rem;
       align-items: center;
       justify-content: center;
     }
-    .cm-zero-message {
+    .cm-action-message {
       grid-column: 2 / 7;
       text-align: right;
       font-size: 0.72rem;
@@ -330,7 +346,7 @@
       letter-spacing: 0.025em;
     }
     @media (prefers-reduced-motion: reduce) {
-      .cm-zero-hint { animation: none; }
+      .cm-action-hint { animation: none; }
     }
   </style>
 </head>
@@ -2507,6 +2523,7 @@
       awaitingNext: false,
       partials: [],
       carries: ['', '', '', '', ''],
+      sumCarries: ['', '', '', '', ''],
       result: ['', '', '', '', ''],
       earned: 0,
       completed: false,
@@ -2564,12 +2581,31 @@
         });
       });
       if (bDigits.length === 2) {
-        steps.push({
-          type: 'sum',
-          left: a * bDigits[0],
-          right: a * bDigits[1] * 10,
-          expected: a * b,
-        });
+        const left = a * bDigits[0];
+        const right = a * bDigits[1] * 10;
+        const columnCount = Math.max(String(left).length, String(right).length);
+        let sumCarry = 0;
+        let pos = 0;
+        const firstAddStep = steps.length;
+        while (pos < columnCount || (sumCarry > 0 && pos < 5)) {
+          const leftDigit = Math.floor(left / 10 ** pos) % 10;
+          const rightDigit = Math.floor(right / 10 ** pos) % 10;
+          const total = leftDigit + rightDigit + sumCarry;
+          steps.push({
+            type: 'add',
+            pos,
+            leftDigit,
+            rightDigit,
+            carryIn: sumCarry,
+            carryOut: Math.floor(total / 10),
+            total,
+            expected: total,
+            isLast: false,
+          });
+          sumCarry = Math.floor(total / 10);
+          pos++;
+        }
+        if (steps.length > firstAddStep) steps[steps.length - 1].isLast = true;
       }
       steps.push({ type: 'finish', expected: a * b });
       return steps;
@@ -2651,7 +2687,9 @@
       const targetRow = step?.type === 'multiply' || step?.type === 'placeholder' ? step.row : -1;
       const targetCol =
         step?.type === 'multiply' ? 4 - step.row - step.pos : step?.type === 'placeholder' ? 4 : -1;
-      const showTotal = step?.type === 'sum' || step?.type === 'finish' || columnState.completed;
+      const addCol = step?.type === 'add' ? 4 - step.pos : -1;
+      const showTotal = step?.type === 'add' || step?.type === 'finish' || columnState.completed;
+      const resultStartCol = 5 - String(columnState.a * columnState.b).length;
 
       let html = '<div class="cm-grid" aria-hidden="true">';
       html += columnCell('', 'text-[10px]');
@@ -2670,27 +2708,54 @@
       html += columnCell('×', 'text-violet-600');
       bottom.forEach((v, i) => (html += columnCell(v, i === bottomHighlight ? 'cm-highlight-bottom' : '')));
       html += '<div class="cm-rule"></div>';
+      if (showTotal && columnState.partials.length === 2) {
+        html += columnCell('', 'cm-carry');
+        columnState.sumCarries.forEach((v) => {
+          const regrouped = v
+            ? `<span class="inline-flex items-center gap-0.5"><span class="cm-carry-plus">+</span><span>${v}</span></span>`
+            : '';
+          html += columnCell(regrouped, 'cm-carry');
+        });
+      }
       columnState.partials.forEach((row, rowIndex) => {
         html += columnCell(rowIndex === 1 ? '+' : '', 'text-violet-500');
         row.forEach((v, colIndex) => {
-          html += columnCell(v, rowIndex === targetRow && colIndex === targetCol ? 'cm-target' : '');
+          let cellClass = rowIndex === targetRow && colIndex === targetCol ? 'cm-target' : '';
+          if (step?.type === 'add' && colIndex === addCol) {
+            cellClass = rowIndex === 0 ? 'cm-highlight-add-top' : 'cm-highlight-add-bottom';
+          }
+          html += columnCell(v, cellClass);
         });
       });
       if (showTotal && columnState.partials.length === 2) {
         html += '<div class="cm-rule"></div>';
         html += columnCell('');
-        columnState.result.forEach((v) => (html += columnCell(v, step?.type === 'sum' ? 'cm-target' : '')));
+        columnState.result.forEach((v, colIndex) => {
+          const boxClass = colIndex >= resultStartCol ? 'cm-answer-box' : '';
+          const currentClass = step?.type === 'add' && colIndex === addCol ? 'cm-target' : boxClass;
+          html += columnCell(v, currentClass);
+        });
       }
       html += '</div>';
       if (step?.type === 'placeholder' && !columnState.awaitingNext) {
         html +=
-          '<div class="cm-zero-hint" role="note">' +
-            '<span class="cm-zero-arrow" aria-hidden="true">' +
+          '<div class="cm-action-hint" role="note">' +
+            '<span class="cm-action-arrow" aria-hidden="true">' +
               '<svg viewBox="0 0 24 30" class="h-7 w-6" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">' +
                 '<path d="M12 27V5"></path><path d="M4 12l8-8 8 8"></path>' +
               '</svg>' +
             '</span>' +
-            '<span class="cm-zero-message">CLICK A ZERO TO PLACE IT HERE</span>' +
+            '<span class="cm-action-message">CLICK A ZERO TO PLACE IT HERE</span>' +
+          '</div>';
+      } else if (step?.type === 'add' && !columnState.awaitingNext) {
+        html +=
+          '<div class="cm-action-hint" role="note">' +
+            `<span class="cm-action-arrow" style="grid-column:${addCol + 2}" aria-hidden="true">` +
+              '<svg viewBox="0 0 24 30" class="h-7 w-6" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">' +
+                '<path d="M12 27V5"></path><path d="M4 12l8-8 8 8"></path>' +
+              '</svg>' +
+            '</span>' +
+            '<span class="cm-action-message">ADD THIS COLUMN — PLACE THE ANSWER HERE</span>' +
           '</div>';
       }
       host.innerHTML = html;
@@ -2708,6 +2773,7 @@
       columnState.awaitingNext = false;
       columnState.partials = Array.from({ length: COLUMN_LEVELS[columnState.level].bDigits }, () => ['', '', '', '', '']);
       columnState.carries = ['', '', '', '', ''];
+      columnState.sumCarries = ['', '', '', '', ''];
       columnState.result = ['', '', '', '', ''];
       columnState.earned = 0;
       columnState.completed = false;
@@ -2751,10 +2817,19 @@
         columnState.carries = ['', '', '', '', ''];
         $('#columnInstruction').textContent = 'Start the tens row. What must go in the ones column?';
         $('#columnEquation').innerHTML = '<span class="text-violet-600">The bottom digit now means tens.</span>';
-      } else if (step.type === 'sum') {
-        columnState.carries = ['', '', '', '', ''];
-        $('#columnInstruction').textContent = 'Add the two working rows to find the total.';
-        $('#columnEquation').textContent = `${step.left} + ${step.right} = ?`;
+      } else if (step.type === 'add') {
+        if (step.pos === 0) {
+          columnState.carries = ['', '', '', '', ''];
+          columnState.sumCarries = ['', '', '', '', ''];
+        }
+        const place = columnPlaceName(step.pos);
+        $('#columnInstruction').textContent =
+          `${step.pos === 0 ? 'Start on the right.' : 'Move one column to the left.'} Add the ${place} column${step.carryIn ? ' and include the regrouped number' : ''}.`;
+        $('#columnEquation').innerHTML =
+          `<span class="inline-block rounded-lg bg-orange-400 px-2 text-white">${step.leftDigit}</span>` +
+          ` + <span class="inline-block rounded-lg bg-emerald-400 px-2 text-emerald-950">${step.rightDigit}</span>` +
+          (step.carryIn ? ` + <span class="text-violet-600">${step.carryIn}</span>` : '') +
+          ' = ?';
       } else {
         finishColumnProblem();
         return;
@@ -2766,8 +2841,12 @@
       if (step.type === 'placeholder') {
         return 'Place 0 in the ones column. This shifts the whole row one place left because we are multiplying by tens.';
       }
-      if (step.type === 'sum') {
-        return `Correct — ${step.left} + ${step.right} = ${step.expected}.`;
+      if (step.type === 'add') {
+        const place = columnPlaceName(step.pos);
+        const written = step.total % 10;
+        return step.carryOut
+          ? `Correct. Write ${written} in the ${place} answer box and regroup ${step.carryOut} above the next column.`
+          : `Correct. Write ${written} in the ${place} answer box. There is nothing to regroup.`;
       }
       const place = columnPlaceName(step.row + step.pos);
       if (step.isLast) {
@@ -2792,12 +2871,15 @@
           columnState.partials[step.row][endCol] = String(step.product % 10);
           if (step.carryOut) columnState.carries[4 - (step.pos + 1)] = String(step.carryOut);
         }
-      } else if (step.type === 'sum') {
-        columnState.result = columnArrayForNumber(step.expected);
+      } else if (step.type === 'add') {
+        const col = 4 - step.pos;
+        if (step.carryIn) columnState.sumCarries[col] = '';
+        columnState.result[col] = String(step.total % 10);
+        if (step.carryOut && col > 0) columnState.sumCarries[col - 1] = String(step.carryOut);
       }
 
       if (!revealed) {
-        columnState.earned += step.type === 'sum' ? 3 : 2;
+        columnState.earned += 2;
       }
       columnState.awaitingNext = true;
       $('#columnAnswerArea').classList.add('hidden');
@@ -2833,6 +2915,7 @@
       if (columnState.completed) return;
       columnState.completed = true;
       columnState.carries = ['', '', '', '', ''];
+      columnState.sumCarries = ['', '', '', '', ''];
       if (columnState.partials.length === 1) {
         columnState.result = columnArrayForNumber(columnState.a * columnState.b);
       }
