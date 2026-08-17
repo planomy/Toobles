@@ -272,6 +272,12 @@
       font-size: 1rem;
       color: #7c3aed;
     }
+    .cm-carry-plus {
+      font-size: 0.62rem;
+      font-weight: 700;
+      opacity: 0.72;
+      transform: translateY(-0.03rem);
+    }
     .cm-highlight-top {
       background: #fb923c !important;
       color: white !important;
@@ -2622,7 +2628,12 @@
         html += `<div class="flex min-h-[1.15rem] items-center justify-center text-[10px] font-bold uppercase tracking-wide text-violet-400">${p}</div>`;
       });
       html += columnCell('', 'cm-carry');
-      columnState.carries.forEach((v) => (html += columnCell(v, 'cm-carry')));
+      columnState.carries.forEach((v) => {
+        const regrouped = v
+          ? `<span class="inline-flex items-center gap-0.5"><span class="cm-carry-plus">+</span><span>${v}</span></span>`
+          : '';
+        html += columnCell(regrouped, 'cm-carry');
+      });
       html += columnCell('');
       top.forEach((v, i) => (html += columnCell(v, i === topHighlight ? 'cm-highlight-top' : '')));
       html += columnCell('×', 'text-violet-600');
