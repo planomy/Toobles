@@ -247,6 +247,54 @@
     .badge-ceremony-ring {
       animation: badge-ceremony-glow 2.2s ease-in-out infinite;
     }
+    .cm-grid {
+      display: grid;
+      grid-template-columns: 2rem repeat(5, 3rem);
+      justify-content: center;
+      align-items: center;
+      gap: 0.18rem;
+      font-variant-numeric: tabular-nums;
+    }
+    .cm-cell {
+      display: flex;
+      min-height: 2.35rem;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0.65rem;
+      font-size: 1.65rem;
+      font-weight: 700;
+      line-height: 1;
+      color: #2e1065;
+      transition: background-color 180ms ease, color 180ms ease, transform 180ms ease;
+    }
+    .cm-carry {
+      min-height: 1.55rem;
+      font-size: 1rem;
+      color: #7c3aed;
+    }
+    .cm-highlight-top {
+      background: #fb923c !important;
+      color: white !important;
+      transform: scale(1.08);
+      box-shadow: 0 4px 12px rgba(251, 146, 60, 0.3);
+    }
+    .cm-highlight-bottom {
+      background: #34d399 !important;
+      color: #064e3b !important;
+      transform: scale(1.08);
+      box-shadow: 0 4px 12px rgba(52, 211, 153, 0.3);
+    }
+    .cm-target {
+      background: #ede9fe;
+      box-shadow: inset 0 0 0 2px #8b5cf6;
+    }
+    .cm-rule {
+      grid-column: 1 / -1;
+      height: 2px;
+      margin: 0.12rem 0;
+      border-radius: 999px;
+      background: #5b21b6;
+    }
   </style>
 </head>
 <body class="min-h-0 overflow-x-hidden overflow-y-hidden bg-gradient-to-br from-violet-200/70 via-violet-50 to-amber-50/40 text-violet-950 antialiased">
@@ -282,6 +330,10 @@
               <svg class="h-[22px] w-[22px] text-white" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
             </span>
             <span>Practice</span>
+          </button>
+          <button type="button" data-nav="column-setup" class="nav-btn flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold hover:bg-white/20">
+            <span class="nav-ico flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15 text-2xl font-black shadow-inner ring-1 ring-white/25" aria-hidden="true">×</span>
+            <span>Big multiply</span>
           </button>
           <div class="flex flex-col gap-1">
             <button type="button" data-nav="grid" class="nav-btn flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold hover:bg-white/20">
@@ -354,8 +406,8 @@
         </div>
 
         <div id="homeFill" class="flex min-h-0 min-w-0 flex-1 flex-col gap-2 overflow-hidden sm:gap-3">
-        <!-- Test/Practice: fixed height 100px -->
-        <div class="grid shrink-0 grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3">
+        <!-- Main learning choices: fixed height 100px -->
+        <div class="grid shrink-0 grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-3">
           <button
             type="button"
             id="homeBtnTest"
@@ -382,6 +434,17 @@
               <span class="mt-1.5 block text-[11px] leading-snug text-violet-600 sm:text-xs">Sharpen your skills here</span>
             </span>
             <span id="homePackBadge" class="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-full bg-orange-400 px-1.5 py-0.5 text-[10px] font-bold text-white sm:right-2 sm:px-2 sm:text-xs hidden">0</span>
+          </button>
+          <button
+            type="button"
+            id="homeBtnColumn"
+            class="tap flex h-[100px] shrink-0 flex-row items-center gap-3 rounded-2xl border border-violet-200/90 bg-gradient-to-b from-white to-violet-50/40 px-3 py-0 text-left shadow-lg shadow-violet-400/30 ring-1 ring-inset ring-white/70 transition hover:border-violet-300/90 hover:shadow-xl hover:shadow-violet-400/40 active:opacity-90 sm:gap-3.5 sm:px-3.5"
+          >
+            <span class="tile-ico inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-violet-600 text-3xl font-black text-white shadow-inner ring-1 ring-white/25 sm:h-14 sm:w-14" aria-hidden="true">×</span>
+            <span class="min-w-0 flex-1">
+              <span class="block text-xl font-extrabold leading-none tracking-tight text-violet-950 sm:text-2xl">Big multiply</span>
+              <span class="mt-1.5 block text-[11px] leading-snug text-violet-600 sm:text-xs">Learn column multiplication</span>
+            </span>
           </button>
         </div>
 
@@ -448,6 +511,99 @@
           </div>
           <div id="homeBadgesGrid" class="min-h-0 w-full flex-1 pb-1 sm:pb-2"></div>
         </div>
+        </div>
+      </section>
+
+      <!-- Column multiplication: level setup -->
+      <section id="view-column-setup" class="view min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <div class="mb-4 flex items-end justify-between gap-3">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-widest text-violet-500">Learn it step by step</p>
+            <h2 class="mt-1 text-2xl font-extrabold text-violet-950 sm:text-3xl">Column multiplication</h2>
+          </div>
+          <span class="hidden rounded-2xl bg-violet-100 px-4 py-2 text-sm font-bold text-violet-700 sm:block">No timer here</span>
+        </div>
+        <p class="mb-4 text-sm leading-relaxed text-violet-600">Choose a level. Toobles will show you where every digit goes — then you do the thinking.</p>
+
+        <div class="grid grid-cols-2 gap-3 sm:gap-4">
+          <label class="column-level-card tap flex min-h-[112px] cursor-pointer items-center gap-3 rounded-2xl border-2 border-violet-500 bg-gradient-to-br from-white to-violet-50 p-4 shadow-md ring-2 ring-violet-200">
+            <input type="radio" name="columnLevel" value="2x1" checked class="h-5 w-5 shrink-0 text-violet-600" />
+            <span><strong class="block text-xl text-violet-950">2-digit × 1-digit</strong><span class="mt-1 block text-sm text-violet-600">Start here</span></span>
+          </label>
+          <label class="column-level-card tap flex min-h-[112px] cursor-pointer items-center gap-3 rounded-2xl border-2 border-violet-200 bg-gradient-to-br from-white to-violet-50 p-4 shadow-md">
+            <input type="radio" name="columnLevel" value="3x1" class="h-5 w-5 shrink-0 text-violet-600" />
+            <span><strong class="block text-xl text-violet-950">3-digit × 1-digit</strong><span class="mt-1 block text-sm text-violet-600">One longer row</span></span>
+          </label>
+          <label class="column-level-card tap flex min-h-[112px] cursor-pointer items-center gap-3 rounded-2xl border-2 border-violet-200 bg-gradient-to-br from-white to-violet-50 p-4 shadow-md">
+            <input type="radio" name="columnLevel" value="2x2" class="h-5 w-5 shrink-0 text-violet-600" />
+            <span><strong class="block text-xl text-violet-950">2-digit × 2-digit</strong><span class="mt-1 block text-sm text-violet-600">Use two working rows</span></span>
+          </label>
+          <label class="column-level-card tap flex min-h-[112px] cursor-pointer items-center gap-3 rounded-2xl border-2 border-violet-200 bg-gradient-to-br from-white to-violet-50 p-4 shadow-md">
+            <input type="radio" name="columnLevel" value="3x2" class="h-5 w-5 shrink-0 text-violet-600" />
+            <span><strong class="block text-xl text-violet-950">3-digit × 2-digit</strong><span class="mt-1 block text-sm text-violet-600">The full challenge</span></span>
+          </label>
+        </div>
+
+        <div class="mt-4 grid grid-cols-3 gap-2 text-center text-xs font-bold text-violet-700 sm:text-sm">
+          <div class="rounded-xl bg-violet-50 px-2 py-2 ring-1 ring-violet-100">1. Read the problem</div>
+          <div class="rounded-xl bg-violet-50 px-2 py-2 ring-1 ring-violet-100">2. Work each column</div>
+          <div class="rounded-xl bg-violet-50 px-2 py-2 ring-1 ring-violet-100">3. Answer in a sentence</div>
+        </div>
+        <button type="button" id="startColumnBtn" class="mt-4 w-full rounded-2xl bg-violet-600 py-3.5 text-base font-bold text-white shadow-lg shadow-violet-300 hover:bg-violet-500 active:bg-violet-700 sm:text-lg">Start learning</button>
+      </section>
+
+      <!-- Column multiplication: guided lesson -->
+      <section id="view-column-run" class="view min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <div class="mb-3 flex items-center justify-between gap-3">
+          <div>
+            <p id="columnLevelLabel" class="text-xs font-bold uppercase tracking-widest text-violet-500">2-digit × 1-digit</p>
+            <h2 class="text-xl font-extrabold text-violet-950 sm:text-2xl">Build the answer</h2>
+          </div>
+          <button type="button" id="columnChangeLevelBtn" class="rounded-xl border-2 border-violet-200 bg-white px-3 py-2 text-xs font-bold text-violet-700 hover:bg-violet-50 sm:text-sm">Change level</button>
+        </div>
+
+        <div class="mb-3 rounded-2xl bg-gradient-to-r from-violet-600 to-violet-500 px-4 py-3 text-white shadow-md">
+          <p class="text-[10px] font-bold uppercase tracking-widest text-violet-200">Word problem</p>
+          <p id="columnProblem" class="mt-1 text-base font-semibold leading-snug sm:text-lg"></p>
+        </div>
+
+        <div class="grid min-h-0 flex-1 gap-3 md:grid-cols-[0.9fr_1.1fr] md:gap-4">
+          <div class="flex min-h-[360px] flex-col rounded-2xl border border-violet-200 bg-gradient-to-b from-white to-violet-50/60 p-3 shadow-inner sm:p-4">
+            <div class="mb-2 flex items-center justify-between gap-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-violet-500">Set it out</span>
+              <span class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-violet-600 ring-1 ring-violet-100">Start from the right →</span>
+            </div>
+            <div id="columnCalculation" class="flex flex-1 items-center justify-center" aria-label="Column multiplication working"></div>
+          </div>
+
+          <div class="flex min-h-[360px] flex-col rounded-2xl border-2 border-violet-200 bg-white p-4 shadow-lg shadow-violet-200/50">
+            <div class="flex items-center justify-between gap-3">
+              <span id="columnStepCounter" class="rounded-full bg-violet-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-violet-700">Step 1</span>
+              <span id="columnPointsEarned" class="text-xs font-bold text-amber-600"></span>
+            </div>
+            <h3 id="columnInstruction" class="mt-3 text-xl font-extrabold leading-snug text-violet-950 sm:text-2xl"></h3>
+            <div id="columnEquation" class="mt-3 rounded-2xl bg-violet-50 px-3 py-3 text-center text-2xl font-black tabular-nums text-violet-900 ring-1 ring-violet-100"></div>
+
+            <div id="columnAnswerArea" class="mt-3">
+              <div id="columnAnswerDisplay" class="flex h-12 items-center justify-center rounded-xl border-2 border-violet-200 bg-white text-2xl font-black tabular-nums text-violet-950" aria-live="polite"><span class="text-violet-300">?</span></div>
+              <div id="columnPad" class="mt-2 grid grid-cols-6 gap-1.5"></div>
+              <div class="mt-2 grid grid-cols-2 gap-2">
+                <button type="button" id="columnShowBtn" class="rounded-xl border-2 border-violet-200 bg-white py-2.5 text-sm font-bold text-violet-700 hover:bg-violet-50">Show me</button>
+                <button type="button" id="columnCheckBtn" class="rounded-xl bg-violet-600 py-2.5 text-sm font-bold text-white shadow-md hover:bg-violet-500">Check</button>
+              </div>
+            </div>
+
+            <p id="columnFeedback" class="mt-3 min-h-[2.75rem] rounded-xl bg-violet-50 px-3 py-2 text-sm font-semibold leading-snug text-violet-700" aria-live="polite"></p>
+            <button type="button" id="columnNextBtn" class="mt-auto hidden w-full rounded-xl bg-violet-600 py-3 text-sm font-bold text-white shadow-md hover:bg-violet-500">Next step</button>
+
+            <div id="columnCompleteActions" class="mt-auto hidden">
+              <p id="columnAnswerSentence" class="mb-3 rounded-xl bg-emerald-50 px-3 py-3 text-center text-base font-bold text-emerald-800 ring-1 ring-emerald-200"></p>
+              <div class="grid grid-cols-2 gap-2">
+                <button type="button" id="columnAnotherBtn" class="rounded-xl bg-violet-600 py-3 text-sm font-bold text-white hover:bg-violet-500">Another problem</button>
+                <button type="button" id="columnHomeBtn" class="rounded-xl border-2 border-violet-200 bg-white py-3 text-sm font-bold text-violet-700 hover:bg-violet-50">Home</button>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -1648,6 +1804,8 @@
     // ---------- Views ----------
     const views = {
       home: $('#view-home'),
+      'column-setup': $('#view-column-setup'),
+      'column-run': $('#view-column-run'),
       'test-setup': $('#view-test-setup'),
       'test-run': $('#view-test-run'),
       'test-results': $('#view-test-results'),
@@ -1677,6 +1835,8 @@
             'bg-white/20',
             viewName === 'practice-setup' || viewName === 'practice-run' || viewName === 'practice-end'
           );
+        } else if (nav === 'column-setup') {
+          btn.classList.toggle('bg-white/20', viewName === 'column-setup' || viewName === 'column-run');
         } else if (nav === 'grid') {
           btn.classList.toggle('bg-white/20', viewName === 'grid' && gridMapView === 'classic');
         } else if (nav === 'grid-genius') {
@@ -2268,6 +2428,376 @@
       });
     }
 
+    // ---------- Guided column multiplication ----------
+    const COLUMN_LEVELS = {
+      '2x1': { aDigits: 2, bDigits: 1, label: '2-digit × 1-digit' },
+      '3x1': { aDigits: 3, bDigits: 1, label: '3-digit × 1-digit' },
+      '2x2': { aDigits: 2, bDigits: 2, label: '2-digit × 2-digit' },
+      '3x2': { aDigits: 3, bDigits: 2, label: '3-digit × 2-digit' },
+    };
+
+    const COLUMN_CONTEXTS = [
+      {
+        problem: (a, b) => `There are ${b} cases of apples. Each case holds ${a} apples. How many apples are there altogether?`,
+        answer: (n) => `There are ${n} apples altogether.`,
+      },
+      {
+        problem: (a, b) => `A school orders ${b} packs of pencils. Each pack contains ${a} pencils. How many pencils are ordered altogether?`,
+        answer: (n) => `The school orders ${n} pencils altogether.`,
+      },
+      {
+        problem: (a, b) => `A bakery fills ${b} trays with ${a} mini cupcakes on each tray. How many mini cupcakes are there altogether?`,
+        answer: (n) => `There are ${n} mini cupcakes altogether.`,
+      },
+      {
+        problem: (a, b) => `There are ${b} boxes of stickers. Each box contains ${a} stickers. How many stickers are there altogether?`,
+        answer: (n) => `There are ${n} stickers altogether.`,
+      },
+      {
+        problem: (a, b) => `A warehouse stacks ${b} cartons. Each carton holds ${a} cans. How many cans are there altogether?`,
+        answer: (n) => `There are ${n} cans altogether.`,
+      },
+    ];
+
+    const columnState = {
+      level: '2x1',
+      a: 0,
+      b: 0,
+      context: null,
+      steps: [],
+      stepIndex: 0,
+      buffer: '',
+      awaitingNext: false,
+      partials: [],
+      carries: ['', '', '', '', ''],
+      result: ['', '', '', '', ''],
+      earned: 0,
+      completed: false,
+    };
+
+    function randomInt(lo, hi) {
+      return lo + Math.floor(Math.random() * (hi - lo + 1));
+    }
+
+    function randomNumberWithDigits(count, onesAtLeastTwo = false) {
+      let s = String(randomInt(1, 9));
+      for (let i = 1; i < count; i++) {
+        const low = onesAtLeastTwo && i === count - 1 ? 2 : 1;
+        s += String(randomInt(low, 9));
+      }
+      return +s;
+    }
+
+    function columnDigitsRight(value) {
+      return String(value).split('').reverse().map(Number);
+    }
+
+    function columnArrayForNumber(value) {
+      const out = ['', '', '', '', ''];
+      const s = String(value);
+      for (let i = 0; i < s.length; i++) out[5 - s.length + i] = s[i];
+      return out;
+    }
+
+    function makeColumnSteps(a, b) {
+      const steps = [];
+      const aDigits = columnDigitsRight(a);
+      const bDigits = columnDigitsRight(b);
+      bDigits.forEach((bDigit, row) => {
+        if (row > 0) {
+          steps.push({ type: 'placeholder', row, expected: 0 });
+        }
+        let carry = 0;
+        aDigits.forEach((aDigit, pos) => {
+          const product = bDigit * aDigit + carry;
+          const isLast = pos === aDigits.length - 1;
+          steps.push({
+            type: 'multiply',
+            row,
+            pos,
+            aDigit,
+            bDigit,
+            carryIn: carry,
+            carryOut: Math.floor(product / 10),
+            product,
+            isLast,
+            expected: product,
+          });
+          carry = Math.floor(product / 10);
+        });
+      });
+      if (bDigits.length === 2) {
+        steps.push({
+          type: 'sum',
+          left: a * bDigits[0],
+          right: a * bDigits[1] * 10,
+          expected: a * b,
+        });
+      }
+      steps.push({ type: 'finish', expected: a * b });
+      return steps;
+    }
+
+    function chooseColumnProblem() {
+      const cfg = COLUMN_LEVELS[columnState.level];
+      let candidate = null;
+      for (let tries = 0; tries < 40; tries++) {
+        const a = randomNumberWithDigits(cfg.aDigits);
+        const b = randomNumberWithDigits(cfg.bDigits, true);
+        const steps = makeColumnSteps(a, b);
+        candidate = { a, b, steps };
+        if (steps.some((s) => s.type === 'multiply' && s.carryOut > 0)) break;
+      }
+      return candidate;
+    }
+
+    function selectedColumnLevel() {
+      return document.querySelector('input[name="columnLevel"]:checked')?.value || '2x1';
+    }
+
+    function refreshColumnLevelCards() {
+      const selected = selectedColumnLevel();
+      document.querySelectorAll('.column-level-card').forEach((card) => {
+        const on = card.querySelector('input')?.value === selected;
+        card.classList.toggle('border-violet-500', on);
+        card.classList.toggle('ring-2', on);
+        card.classList.toggle('ring-violet-200', on);
+        card.classList.toggle('border-violet-200', !on);
+      });
+    }
+
+    function buildColumnPad() {
+      const host = $('#columnPad');
+      if (!host) return;
+      host.innerHTML = '';
+      ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'clear', '0', 'back'].forEach((value) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.dataset.columnKey = value;
+        btn.className =
+          'tap flex h-9 items-center justify-center rounded-lg border border-violet-200 bg-white text-sm font-bold text-violet-900 shadow-sm hover:bg-violet-50';
+        btn.textContent = value === 'clear' ? 'C' : value === 'back' ? '⌫' : value;
+        btn.setAttribute('aria-label', value === 'clear' ? 'Clear answer' : value === 'back' ? 'Delete last digit' : value);
+        host.appendChild(btn);
+      });
+    }
+
+    function updateColumnAnswerDisplay() {
+      const el = $('#columnAnswerDisplay');
+      if (!el) return;
+      el.innerHTML = columnState.buffer
+        ? `<span>${columnState.buffer}</span>`
+        : '<span class="text-violet-300">?</span>';
+    }
+
+    function columnPlaceName(indexFromRight) {
+      return ['ones', 'tens', 'hundreds', 'thousands', 'ten-thousands'][indexFromRight] || 'next';
+    }
+
+    function placeDigitsInColumnRow(row, value, endCol) {
+      const s = String(value);
+      for (let i = s.length - 1, col = endCol; i >= 0 && col >= 0; i--, col--) row[col] = s[i];
+    }
+
+    function columnCell(value, extra = '') {
+      return `<div class="cm-cell ${extra}">${value ?? ''}</div>`;
+    }
+
+    function renderColumnCalculation(step = columnState.steps[columnState.stepIndex]) {
+      const host = $('#columnCalculation');
+      if (!host) return;
+      const top = columnArrayForNumber(columnState.a);
+      const bottom = columnArrayForNumber(columnState.b);
+      const topHighlight = step?.type === 'multiply' ? 4 - step.pos : -1;
+      const bottomHighlight =
+        step?.type === 'multiply' ? 4 - step.row : step?.type === 'placeholder' ? 3 : -1;
+      const targetRow = step?.type === 'multiply' || step?.type === 'placeholder' ? step.row : -1;
+      const targetCol =
+        step?.type === 'multiply' ? 4 - step.row - step.pos : step?.type === 'placeholder' ? 4 : -1;
+      const showTotal = step?.type === 'sum' || step?.type === 'finish' || columnState.completed;
+
+      let html = '<div class="cm-grid" aria-hidden="true">';
+      html += columnCell('', 'text-[10px]');
+      ['TTh', 'Th', 'H', 'T', 'O'].forEach((p) => {
+        html += `<div class="flex min-h-[1.15rem] items-center justify-center text-[10px] font-bold uppercase tracking-wide text-violet-400">${p}</div>`;
+      });
+      html += columnCell('', 'cm-carry');
+      columnState.carries.forEach((v) => (html += columnCell(v, 'cm-carry')));
+      html += columnCell('');
+      top.forEach((v, i) => (html += columnCell(v, i === topHighlight ? 'cm-highlight-top' : '')));
+      html += columnCell('×', 'text-violet-600');
+      bottom.forEach((v, i) => (html += columnCell(v, i === bottomHighlight ? 'cm-highlight-bottom' : '')));
+      html += '<div class="cm-rule"></div>';
+      columnState.partials.forEach((row, rowIndex) => {
+        html += columnCell(rowIndex === 1 ? '+' : '', 'text-violet-500');
+        row.forEach((v, colIndex) => {
+          html += columnCell(v, rowIndex === targetRow && colIndex === targetCol ? 'cm-target' : '');
+        });
+      });
+      if (showTotal && columnState.partials.length === 2) {
+        html += '<div class="cm-rule"></div>';
+        html += columnCell('');
+        columnState.result.forEach((v) => (html += columnCell(v, step?.type === 'sum' ? 'cm-target' : '')));
+      }
+      html += '</div>';
+      host.innerHTML = html;
+    }
+
+    function startColumnProblem() {
+      columnState.level = selectedColumnLevel();
+      const chosen = chooseColumnProblem();
+      columnState.a = chosen.a;
+      columnState.b = chosen.b;
+      columnState.steps = chosen.steps;
+      columnState.context = COLUMN_CONTEXTS[randomInt(0, COLUMN_CONTEXTS.length - 1)];
+      columnState.stepIndex = 0;
+      columnState.buffer = '';
+      columnState.awaitingNext = false;
+      columnState.partials = Array.from({ length: COLUMN_LEVELS[columnState.level].bDigits }, () => ['', '', '', '', '']);
+      columnState.carries = ['', '', '', '', ''];
+      columnState.result = ['', '', '', '', ''];
+      columnState.earned = 0;
+      columnState.completed = false;
+
+      $('#columnLevelLabel').textContent = COLUMN_LEVELS[columnState.level].label;
+      $('#columnProblem').textContent = columnState.context.problem(columnState.a, columnState.b);
+      showView('column-run');
+      showColumnStep();
+    }
+
+    function showColumnStep() {
+      const step = columnState.steps[columnState.stepIndex];
+      columnState.buffer = '';
+      columnState.awaitingNext = false;
+      updateColumnAnswerDisplay();
+      $('#columnNextBtn').classList.add('hidden');
+      $('#columnCompleteActions').classList.add('hidden');
+      $('#columnAnswerArea').classList.remove('hidden');
+      $('#columnEquation').classList.remove('hidden');
+      $('#columnFeedback').classList.remove('hidden');
+      $('#columnFeedback').textContent = 'Use the number pad, then check your answer.';
+      $('#columnPointsEarned').textContent = columnState.earned ? `+${columnState.earned} points` : '';
+
+      const learningStepCount = columnState.steps.length - 1;
+      $('#columnStepCounter').textContent =
+        step.type === 'finish' ? 'Complete' : `Step ${columnState.stepIndex + 1} of ${learningStepCount}`;
+
+      if (step.type === 'multiply') {
+        const moveText = step.row === 0 && step.pos === 0
+          ? 'Start in the ones column.'
+          : step.pos === 0
+            ? 'Now use the tens digit on the bottom row.'
+            : 'Move one column to the left.';
+        $('#columnInstruction').textContent = `${moveText} Multiply the highlighted digits${step.carryIn ? ' and add the regrouped number' : ''}.`;
+        $('#columnEquation').innerHTML =
+          `<span class="inline-block rounded-lg bg-emerald-400 px-2 text-emerald-950">${step.bDigit}</span>` +
+          ` × <span class="inline-block rounded-lg bg-orange-400 px-2 text-white">${step.aDigit}</span>` +
+          (step.carryIn ? ` + <span class="text-violet-600">${step.carryIn}</span>` : '') +
+          ' = ?';
+      } else if (step.type === 'placeholder') {
+        columnState.carries = ['', '', '', '', ''];
+        $('#columnInstruction').textContent = 'Start the tens row. What must go in the ones column?';
+        $('#columnEquation').innerHTML = '<span class="text-violet-600">The bottom digit now means tens.</span>';
+      } else if (step.type === 'sum') {
+        columnState.carries = ['', '', '', '', ''];
+        $('#columnInstruction').textContent = 'Add the two working rows to find the total.';
+        $('#columnEquation').textContent = `${step.left} + ${step.right} = ?`;
+      } else {
+        finishColumnProblem();
+        return;
+      }
+      renderColumnCalculation(step);
+    }
+
+    function columnStepSuccessMessage(step) {
+      if (step.type === 'placeholder') {
+        return 'Place 0 in the ones column. This shifts the whole row one place left because we are multiplying by tens.';
+      }
+      if (step.type === 'sum') {
+        return `Correct — ${step.left} + ${step.right} = ${step.expected}.`;
+      }
+      const place = columnPlaceName(step.row + step.pos);
+      if (step.isLast) {
+        return `Correct. Write ${step.product} at the beginning of this working row.`;
+      }
+      const written = step.product % 10;
+      return step.carryOut
+        ? `Correct. Write ${written} in the ${place} column and regroup ${step.carryOut} above the next digit.`
+        : `Correct. Write ${written} in the ${place} column. There is nothing to regroup.`;
+    }
+
+    function commitColumnStep(step, revealed) {
+      if (step.type === 'placeholder') {
+        columnState.partials[step.row][4] = '0';
+      } else if (step.type === 'multiply') {
+        const currentTopCol = 4 - step.pos;
+        if (step.carryIn) columnState.carries[currentTopCol] = '';
+        const endCol = 4 - step.row - step.pos;
+        if (step.isLast) {
+          placeDigitsInColumnRow(columnState.partials[step.row], step.product, endCol);
+        } else {
+          columnState.partials[step.row][endCol] = String(step.product % 10);
+          if (step.carryOut) columnState.carries[4 - (step.pos + 1)] = String(step.carryOut);
+        }
+      } else if (step.type === 'sum') {
+        columnState.result = columnArrayForNumber(step.expected);
+      }
+
+      if (!revealed) {
+        columnState.earned += step.type === 'sum' ? 3 : 2;
+      }
+      columnState.awaitingNext = true;
+      $('#columnAnswerArea').classList.add('hidden');
+      $('#columnFeedback').textContent = (revealed ? 'Here it is. ' : '') + columnStepSuccessMessage(step);
+      $('#columnPointsEarned').textContent = columnState.earned ? `+${columnState.earned} points` : '';
+      $('#columnNextBtn').textContent =
+        columnState.steps[columnState.stepIndex + 1]?.type === 'finish' ? 'Finish problem' : 'Next step';
+      $('#columnNextBtn').classList.remove('hidden');
+      renderColumnCalculation(step);
+    }
+
+    function checkColumnAnswer(revealed = false) {
+      if (columnState.awaitingNext || columnState.completed) return;
+      const step = columnState.steps[columnState.stepIndex];
+      if (!step || step.type === 'finish') return;
+      const value = revealed ? step.expected : Number(columnState.buffer);
+      if (!revealed && columnState.buffer === '') {
+        $('#columnFeedback').textContent = 'Enter an answer first.';
+        return;
+      }
+      if (value !== step.expected) {
+        $('#columnFeedback').textContent = 'Not quite. Check the highlighted digits and have another go.';
+        $('#columnAnswerDisplay').classList.add('border-rose-300', 'bg-rose-50');
+        setTimeout(() => $('#columnAnswerDisplay')?.classList.remove('border-rose-300', 'bg-rose-50'), 450);
+        return;
+      }
+      columnState.buffer = String(step.expected);
+      updateColumnAnswerDisplay();
+      commitColumnStep(step, revealed);
+    }
+
+    function finishColumnProblem() {
+      if (columnState.completed) return;
+      columnState.completed = true;
+      columnState.carries = ['', '', '', '', ''];
+      if (columnState.partials.length === 1) {
+        columnState.result = columnArrayForNumber(columnState.a * columnState.b);
+      }
+      addLifetimePracticePoints(columnState.earned);
+      $('#columnInstruction').textContent = 'You built the whole calculation!';
+      $('#columnEquation').classList.add('hidden');
+      $('#columnAnswerArea').classList.add('hidden');
+      $('#columnFeedback').classList.add('hidden');
+      $('#columnNextBtn').classList.add('hidden');
+      $('#columnAnswerSentence').textContent = columnState.context.answer(columnState.a * columnState.b);
+      $('#columnCompleteActions').classList.remove('hidden');
+      $('#columnPointsEarned').textContent = `+${columnState.earned} points`;
+      renderColumnCalculation({ type: 'finish' });
+      if (window.confetti) {
+        window.confetti({ particleCount: 70, spread: 65, origin: { y: 0.72 }, colors: ['#7c3aed', '#34d399', '#fb923c'] });
+      }
+    }
+
     // ---------- Test queue ----------
     let testRangeSelectsWired = false;
     let practiceRangeSelectsWired = false;
@@ -2811,6 +3341,7 @@
       const viewTest = views['test-run'] && views['test-run'].classList.contains('active');
       const viewPrac =
         views['practice-run'] && views['practice-run'].classList.contains('active');
+      const viewColumn = views['column-run'] && views['column-run'].classList.contains('active');
       if (viewTest && !testAwaitingNext && testIndex < testQueue.length) {
         if (/^[0-9]$/.test(e.key)) {
           e.preventDefault();
@@ -2837,6 +3368,22 @@
         }
         if (e.key === 'Escape') {
           practiceState.buffer = '';
+        }
+      }
+      if (viewColumn && !columnState.awaitingNext && !columnState.completed) {
+        if (/^[0-9]$/.test(e.key)) {
+          e.preventDefault();
+          columnState.buffer = (columnState.buffer + e.key).slice(0, 5);
+          updateColumnAnswerDisplay();
+        }
+        if (e.key === 'Backspace') {
+          e.preventDefault();
+          columnState.buffer = columnState.buffer.slice(0, -1);
+          updateColumnAnswerDisplay();
+        }
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          checkColumnAnswer(false);
         }
       }
     });
@@ -2888,17 +3435,42 @@
       });
       buildPad('#pad-test', 'test', { compact: true });
       buildPad('#pad-practice', 'practice', { compact: true, practiceLarge: true });
+      buildColumnPad();
       wirePad('#pad-test', 'test');
       wirePad('#pad-practice', 'practice');
 
       $('#homeBtnTest').addEventListener('click', () => showView('test-setup'));
       $('#homeBtnPractice').addEventListener('click', () => openPracticeView());
+      $('#homeBtnColumn').addEventListener('click', () => showView('column-setup'));
+
+      $$('input[name="columnLevel"]').forEach((r) => r.addEventListener('change', refreshColumnLevelCards));
+      $('#startColumnBtn').addEventListener('click', startColumnProblem);
+      $('#columnChangeLevelBtn').addEventListener('click', () => showView('column-setup'));
+      $('#columnAnotherBtn').addEventListener('click', startColumnProblem);
+      $('#columnHomeBtn').addEventListener('click', () => showView('home'));
+      $('#columnCheckBtn').addEventListener('click', () => checkColumnAnswer(false));
+      $('#columnShowBtn').addEventListener('click', () => checkColumnAnswer(true));
+      $('#columnNextBtn').addEventListener('click', () => {
+        if (!columnState.awaitingNext) return;
+        columnState.stepIndex++;
+        showColumnStep();
+      });
+      $('#columnPad').addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-column-key]');
+        if (!btn || columnState.awaitingNext || columnState.completed) return;
+        const key = btn.dataset.columnKey;
+        if (key === 'clear') columnState.buffer = '';
+        else if (key === 'back') columnState.buffer = columnState.buffer.slice(0, -1);
+        else columnState.buffer = (columnState.buffer + key).slice(0, 5);
+        updateColumnAnswerDisplay();
+      });
 
       $$('.nav-btn').forEach((btn) => {
         btn.addEventListener('click', () => {
           const nav = btn.getAttribute('data-nav');
           if (nav === 'home') showView('home');
           else if (nav === 'test-setup') showView('test-setup');
+          else if (nav === 'column-setup') showView('column-setup');
           else if (nav === 'grid') {
             gridMapView = 'classic';
             openGridView();
