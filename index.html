@@ -348,6 +348,126 @@
     @media (prefers-reduced-motion: reduce) {
       .cm-action-hint { animation: none; }
     }
+    .sd-working {
+      width: min(100%, 22rem);
+      font-variant-numeric: tabular-nums;
+    }
+    .sd-quotient-row {
+      display: grid;
+      grid-template-columns: 3.15rem repeat(4, 3.25rem);
+      justify-content: center;
+      align-items: end;
+    }
+    .sd-bus-row {
+      display: grid;
+      grid-template-columns: 3.15rem auto;
+      justify-content: center;
+      align-items: stretch;
+    }
+    .sd-divisor {
+      display: flex;
+      min-height: 4rem;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0.8rem;
+      font-size: 2rem;
+      font-weight: 800;
+      color: #064e3b;
+      transition: transform 180ms ease, background-color 180ms ease;
+    }
+    .sd-divisor.is-active {
+      background: #34d399;
+      transform: scale(1.06);
+      box-shadow: 0 4px 12px rgba(52, 211, 153, 0.3);
+    }
+    .sd-dividend-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 3.25rem);
+      min-height: 4rem;
+      border-top: 3px solid #5b21b6;
+      border-left: 3px solid #5b21b6;
+      border-radius: 0.75rem 0 0 0;
+    }
+    .sd-cell,
+    .sd-digit-cell {
+      position: relative;
+      display: flex;
+      min-height: 3.55rem;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0.7rem;
+      font-size: 1.9rem;
+      font-weight: 800;
+      line-height: 1;
+      color: #2e1065;
+      transition: transform 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
+    }
+    .sd-quotient-row .sd-cell {
+      min-height: 3.1rem;
+    }
+    .sd-answer-box {
+      background: #f5f3ff;
+      box-shadow: inset 0 0 0 2px #8b5cf6;
+    }
+    .sd-answer-target {
+      background: #ede9fe;
+      box-shadow: inset 0 0 0 3px #7c3aed, 0 3px 10px rgba(124, 58, 237, 0.2);
+      transform: scale(1.05);
+    }
+    .sd-active-digit {
+      background: #fb923c;
+      color: white;
+      transform: scale(1.06);
+      box-shadow: 0 4px 12px rgba(251, 146, 60, 0.3);
+    }
+    .sd-carry-mark {
+      position: absolute;
+      left: 0.15rem;
+      top: 0.15rem;
+      display: inline-flex;
+      min-width: 1rem;
+      height: 1rem;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      background: #7c3aed;
+      padding: 0 0.2rem;
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: white;
+      box-shadow: 0 2px 5px rgba(91, 33, 182, 0.28);
+    }
+    .sd-carry-target {
+      background: #ede9fe;
+      box-shadow: inset 0 0 0 3px #8b5cf6;
+    }
+    .sd-carry-arrow {
+      margin-top: 0.65rem;
+      text-align: center;
+      color: #7c3aed;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.025em;
+      animation: sd-carry-slide 0.9s ease-in-out infinite;
+    }
+    .sd-final-remainder {
+      margin: 0.85rem auto 0;
+      width: fit-content;
+      border-radius: 0.8rem;
+      background: #f5f3ff;
+      padding: 0.45rem 0.85rem;
+      font-size: 1rem;
+      font-weight: 800;
+      color: #5b21b6;
+      box-shadow: inset 0 0 0 2px #c4b5fd;
+    }
+    @keyframes sd-carry-slide {
+      0%, 100% { transform: translateX(-5px); }
+      50% { transform: translateX(5px); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .sd-carry-arrow { animation: none; }
+    }
   </style>
 </head>
 <body class="min-h-0 overflow-x-hidden overflow-y-hidden bg-gradient-to-br from-violet-200/70 via-violet-50 to-amber-50/40 text-violet-950 antialiased">
@@ -387,6 +507,10 @@
           <button type="button" data-nav="column-setup" class="nav-btn flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold hover:bg-white/20">
             <span class="nav-ico flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15 text-2xl font-black shadow-inner ring-1 ring-white/25" aria-hidden="true">×</span>
             <span>Big multiply</span>
+          </button>
+          <button type="button" data-nav="divide-setup" class="nav-btn flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold hover:bg-white/20">
+            <span class="nav-ico flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15 text-2xl font-black shadow-inner ring-1 ring-white/25" aria-hidden="true">÷</span>
+            <span>Big divide</span>
           </button>
           <div class="flex flex-col gap-1">
             <button type="button" data-nav="grid" class="nav-btn flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold hover:bg-white/20">
@@ -460,7 +584,7 @@
 
         <div id="homeFill" class="flex min-h-0 min-w-0 flex-1 flex-col gap-2 overflow-hidden sm:gap-3">
         <!-- Main learning choices: fixed height 100px -->
-        <div class="grid shrink-0 grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-3">
+        <div class="grid shrink-0 grid-cols-1 gap-2 sm:grid-cols-4 sm:gap-3">
           <button
             type="button"
             id="homeBtnTest"
@@ -497,6 +621,17 @@
             <span class="min-w-0 flex-1">
               <span class="block text-xl font-extrabold leading-none tracking-tight text-violet-950 sm:text-2xl">Big multiply</span>
               <span class="mt-1.5 block text-[11px] leading-snug text-violet-600 sm:text-xs">Learn column multiplication</span>
+            </span>
+          </button>
+          <button
+            type="button"
+            id="homeBtnDivide"
+            class="tap flex h-[100px] shrink-0 flex-row items-center gap-3 rounded-2xl border border-violet-200/90 bg-gradient-to-b from-white to-violet-50/40 px-3 py-0 text-left shadow-lg shadow-violet-400/30 ring-1 ring-inset ring-white/70 transition hover:border-violet-300/90 hover:shadow-xl hover:shadow-violet-400/40 active:opacity-90 sm:gap-3 sm:px-3"
+          >
+            <span class="tile-ico inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-violet-600 text-3xl font-black text-white shadow-inner ring-1 ring-white/25 sm:h-14 sm:w-14" aria-hidden="true">÷</span>
+            <span class="min-w-0 flex-1">
+              <span class="block text-xl font-extrabold leading-none tracking-tight text-violet-950">Big divide</span>
+              <span class="mt-1.5 block text-[11px] leading-snug text-violet-600 sm:text-xs">Learn short division</span>
             </span>
           </button>
         </div>
@@ -654,6 +789,99 @@
               <div class="grid grid-cols-2 gap-2">
                 <button type="button" id="columnAnotherBtn" class="rounded-xl bg-violet-600 py-3 text-sm font-bold text-white hover:bg-violet-500">Another problem</button>
                 <button type="button" id="columnHomeBtn" class="rounded-xl border-2 border-violet-200 bg-white py-3 text-sm font-bold text-violet-700 hover:bg-violet-50">Home</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Short division: level setup -->
+      <section id="view-divide-setup" class="view min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <div class="mb-4 flex items-end justify-between gap-3">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-widest text-violet-500">Learn it step by step</p>
+            <h2 class="mt-1 text-2xl font-extrabold text-violet-950 sm:text-3xl">Short division</h2>
+          </div>
+          <span class="hidden rounded-2xl bg-violet-100 px-4 py-2 text-sm font-bold text-violet-700 sm:block">No timer here</span>
+        </div>
+        <p class="mb-4 text-sm leading-relaxed text-violet-600">Choose a level. Divide from left to right, carry any remainder, then repeat.</p>
+
+        <div class="grid grid-cols-2 gap-3 sm:gap-4">
+          <label class="divide-level-card tap flex min-h-[112px] cursor-pointer items-center gap-3 rounded-2xl border-2 border-violet-500 bg-gradient-to-br from-white to-violet-50 p-4 shadow-md ring-2 ring-violet-200">
+            <input type="radio" name="divideLevel" value="easy" checked class="h-5 w-5 shrink-0 text-violet-600" />
+            <span><strong class="block text-xl text-violet-950">Level 1</strong><span class="mt-1 block text-sm text-violet-600">Digits divide exactly</span></span>
+          </label>
+          <label class="divide-level-card tap flex min-h-[112px] cursor-pointer items-center gap-3 rounded-2xl border-2 border-violet-200 bg-gradient-to-br from-white to-violet-50 p-4 shadow-md">
+            <input type="radio" name="divideLevel" value="carry" class="h-5 w-5 shrink-0 text-violet-600" />
+            <span><strong class="block text-xl text-violet-950">Level 2</strong><span class="mt-1 block text-sm text-violet-600">Carry between digits</span></span>
+          </label>
+          <label class="divide-level-card tap flex min-h-[112px] cursor-pointer items-center gap-3 rounded-2xl border-2 border-violet-200 bg-gradient-to-br from-white to-violet-50 p-4 shadow-md">
+            <input type="radio" name="divideLevel" value="remainder" class="h-5 w-5 shrink-0 text-violet-600" />
+            <span><strong class="block text-xl text-violet-950">Level 3</strong><span class="mt-1 block text-sm text-violet-600">Finish with a remainder</span></span>
+          </label>
+          <label class="divide-level-card tap flex min-h-[112px] cursor-pointer items-center gap-3 rounded-2xl border-2 border-violet-200 bg-gradient-to-br from-white to-violet-50 p-4 shadow-md">
+            <input type="radio" name="divideLevel" value="challenge" class="h-5 w-5 shrink-0 text-violet-600" />
+            <span><strong class="block text-xl text-violet-950">Challenge</strong><span class="mt-1 block text-sm text-violet-600">Four digits and zeros</span></span>
+          </label>
+        </div>
+
+        <div class="mt-4 grid grid-cols-3 gap-2 text-center text-xs font-bold text-violet-700 sm:text-sm">
+          <div class="rounded-xl bg-violet-50 px-2 py-2 ring-1 ring-violet-100">1. Divide</div>
+          <div class="rounded-xl bg-violet-50 px-2 py-2 ring-1 ring-violet-100">2. Carry</div>
+          <div class="rounded-xl bg-violet-50 px-2 py-2 ring-1 ring-violet-100">3. Repeat</div>
+        </div>
+        <button type="button" id="startDivideBtn" class="mt-4 w-full rounded-2xl bg-violet-600 py-3.5 text-base font-bold text-white shadow-lg shadow-violet-300 hover:bg-violet-500 active:bg-violet-700 sm:text-lg">Start learning</button>
+      </section>
+
+      <!-- Short division: guided lesson -->
+      <section id="view-divide-run" class="view min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <div class="mb-3 flex items-center justify-between gap-3">
+          <div>
+            <p id="divideLevelLabel" class="text-xs font-bold uppercase tracking-widest text-violet-500">Level 1 · Exact division</p>
+            <h2 class="text-xl font-extrabold text-violet-950 sm:text-2xl">Build the answer</h2>
+          </div>
+          <button type="button" id="divideChangeLevelBtn" class="rounded-xl border-2 border-violet-200 bg-white px-3 py-2 text-xs font-bold text-violet-700 hover:bg-violet-50 sm:text-sm">Change level</button>
+        </div>
+
+        <div class="mb-3 rounded-2xl bg-gradient-to-r from-violet-600 to-violet-500 px-4 py-3 text-white shadow-md">
+          <p class="text-[10px] font-bold uppercase tracking-widest text-violet-200">Word problem</p>
+          <p id="divideProblem" class="mt-1 text-base font-semibold leading-snug sm:text-lg"></p>
+        </div>
+
+        <div class="grid min-h-0 flex-1 gap-3 md:grid-cols-[0.9fr_1.1fr] md:gap-4">
+          <div class="flex min-h-[360px] flex-col rounded-2xl border border-violet-200 bg-gradient-to-b from-white to-violet-50/60 p-3 shadow-inner sm:p-4">
+            <div class="mb-2 flex items-center justify-between gap-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-violet-500">Short division</span>
+              <span class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-violet-600 ring-1 ring-violet-100">Start from the left →</span>
+            </div>
+            <div id="divideCalculation" class="flex flex-1 items-center justify-center" aria-label="Short division working"></div>
+          </div>
+
+          <div class="flex min-h-[360px] flex-col rounded-2xl border-2 border-violet-200 bg-white p-4 shadow-lg shadow-violet-200/50">
+            <div class="flex items-center justify-between gap-3">
+              <span id="divideStepCounter" class="rounded-full bg-violet-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-violet-700">Step 1</span>
+              <span id="dividePointsEarned" class="text-xs font-bold text-amber-600"></span>
+            </div>
+            <h3 id="divideInstruction" class="mt-3 text-xl font-extrabold leading-snug text-violet-950 sm:text-2xl"></h3>
+            <div id="divideEquation" class="mt-3 rounded-2xl bg-violet-50 px-3 py-3 text-center text-2xl font-black tabular-nums text-violet-900 ring-1 ring-violet-100"></div>
+
+            <div id="divideAnswerArea" class="mt-3">
+              <div id="divideAnswerDisplay" class="flex h-12 items-center justify-center rounded-xl border-2 border-violet-200 bg-white text-2xl font-black tabular-nums text-violet-950" aria-live="polite"><span class="text-violet-300">?</span></div>
+              <div id="dividePad" class="mt-2 grid grid-cols-6 gap-1.5"></div>
+              <div class="mt-2 grid grid-cols-2 gap-2">
+                <button type="button" id="divideShowBtn" class="rounded-xl border-2 border-violet-200 bg-white py-2.5 text-sm font-bold text-violet-700 hover:bg-violet-50">Show me</button>
+                <button type="button" id="divideCheckBtn" class="rounded-xl bg-violet-600 py-2.5 text-sm font-bold text-white shadow-md hover:bg-violet-500">Check</button>
+              </div>
+            </div>
+
+            <p id="divideFeedback" class="mt-3 min-h-[2.75rem] rounded-xl bg-violet-50 px-3 py-2 text-sm font-semibold leading-snug text-violet-700" aria-live="polite"></p>
+            <button type="button" id="divideNextBtn" class="mt-auto hidden w-full rounded-xl bg-violet-600 py-3 text-sm font-bold text-white shadow-md hover:bg-violet-500">Next step</button>
+
+            <div id="divideCompleteActions" class="mt-auto hidden">
+              <p id="divideAnswerSentence" class="mb-3 rounded-xl bg-emerald-50 px-3 py-3 text-center text-base font-bold text-emerald-800 ring-1 ring-emerald-200"></p>
+              <div class="grid grid-cols-2 gap-2">
+                <button type="button" id="divideAnotherBtn" class="rounded-xl bg-violet-600 py-3 text-sm font-bold text-white hover:bg-violet-500">Another problem</button>
+                <button type="button" id="divideHomeBtn" class="rounded-xl border-2 border-violet-200 bg-white py-3 text-sm font-bold text-violet-700 hover:bg-violet-50">Home</button>
               </div>
             </div>
           </div>
@@ -1859,6 +2087,8 @@
       home: $('#view-home'),
       'column-setup': $('#view-column-setup'),
       'column-run': $('#view-column-run'),
+      'divide-setup': $('#view-divide-setup'),
+      'divide-run': $('#view-divide-run'),
       'test-setup': $('#view-test-setup'),
       'test-run': $('#view-test-run'),
       'test-results': $('#view-test-results'),
@@ -1890,6 +2120,8 @@
           );
         } else if (nav === 'column-setup') {
           btn.classList.toggle('bg-white/20', viewName === 'column-setup' || viewName === 'column-run');
+        } else if (nav === 'divide-setup') {
+          btn.classList.toggle('bg-white/20', viewName === 'divide-setup' || viewName === 'divide-run');
         } else if (nav === 'grid') {
           btn.classList.toggle('bg-white/20', viewName === 'grid' && gridMapView === 'classic');
         } else if (nav === 'grid-genius') {
@@ -2934,6 +3166,444 @@
       }
     }
 
+    // ---------- Guided short division ----------
+    const DIVIDE_LEVELS = {
+      easy: { label: 'Level 1 · Digits divide exactly' },
+      carry: { label: 'Level 2 · Carry between digits' },
+      remainder: { label: 'Level 3 · Final remainders' },
+      challenge: { label: 'Challenge · Four digits and zeros' },
+    };
+
+    const DIVIDE_CONTEXTS = [
+      {
+        problem: (dividend, divisor) =>
+          `A teacher shares ${dividend} counters equally among ${divisor} groups. How many counters go in each group, and are any left over?`,
+        answer: (quotient, remainder) =>
+          `${quotient} counters go in each group${remainder ? `, with ${remainder} left over.` : ', with none left over.'}`,
+      },
+      {
+        problem: (dividend, divisor) =>
+          `${dividend} stickers are shared equally between ${divisor} students. How many stickers does each student receive, and are any left over?`,
+        answer: (quotient, remainder) =>
+          `Each student receives ${quotient} stickers${remainder ? `, with ${remainder} left over.` : ', with none left over.'}`,
+      },
+      {
+        problem: (dividend, divisor) =>
+          `A bakery packs ${dividend} mini cupcakes into boxes of ${divisor}. How many full boxes can it fill, and how many cupcakes are left?`,
+        answer: (quotient, remainder) =>
+          `The bakery fills ${quotient} boxes${remainder ? ` and has ${remainder} cupcake${remainder === 1 ? '' : 's'} left.` : ' with none left.'}`,
+      },
+      {
+        problem: (dividend, divisor) =>
+          `${dividend} game tokens are placed into equal rows of ${divisor}. How many full rows are made, and how many tokens remain?`,
+        answer: (quotient, remainder) =>
+          `${quotient} full rows are made${remainder ? `, with ${remainder} token${remainder === 1 ? '' : 's'} remaining.` : ', with no tokens remaining.'}`,
+      },
+    ];
+
+    const divideState = {
+      level: 'easy',
+      dividend: 0,
+      divisor: 0,
+      quotientValue: 0,
+      remainderValue: 0,
+      context: null,
+      digits: [],
+      offset: 0,
+      steps: [],
+      stepIndex: 0,
+      buffer: '',
+      awaitingNext: false,
+      quotient: ['', '', '', ''],
+      carryMarks: ['', '', '', ''],
+      finalRemainder: '',
+      earned: 0,
+      completed: false,
+    };
+
+    function makeShortDivisionSteps(dividend, divisor) {
+      const digits = String(dividend).split('').map(Number);
+      const offset = 4 - digits.length;
+      const steps = [];
+      let dividendIndex = 0;
+      let sourceStart = 0;
+      let chunk = digits[0];
+
+      if (chunk < divisor && digits.length > 1) {
+        dividendIndex = 1;
+        chunk = digits[0] * 10 + digits[1];
+      }
+
+      while (dividendIndex < digits.length) {
+        const quotientDigit = Math.floor(chunk / divisor);
+        const remainder = chunk % divisor;
+        steps.push({
+          type: 'quotient',
+          chunk,
+          divisor,
+          quotientDigit,
+          remainder,
+          sourceStart,
+          sourceEnd: dividendIndex,
+          dividendIndex,
+          quotientCol: offset + dividendIndex,
+          expected: quotientDigit,
+        });
+
+        if (dividendIndex === digits.length - 1) {
+          if (remainder > 0) {
+            steps.push({
+              type: 'final-remainder',
+              remainder,
+              expected: remainder,
+            });
+          }
+          break;
+        }
+
+        const nextIndex = dividendIndex + 1;
+        if (remainder > 0) {
+          steps.push({
+            type: 'carry',
+            remainder,
+            fromIndex: dividendIndex,
+            toIndex: nextIndex,
+            nextDigit: digits[nextIndex],
+            nextChunk: remainder * 10 + digits[nextIndex],
+            expected: remainder,
+          });
+        }
+        sourceStart = nextIndex;
+        dividendIndex = nextIndex;
+        chunk = remainder * 10 + digits[dividendIndex];
+      }
+
+      steps.push({
+        type: 'finish',
+        expected: Math.floor(dividend / divisor),
+      });
+      return steps;
+    }
+
+    function divisionHasCarry(steps) {
+      return steps.some((step) => step.type === 'carry');
+    }
+
+    function divisionHasZeroInAnswer(steps) {
+      return steps.some((step) => step.type === 'quotient' && step.quotientDigit === 0);
+    }
+
+    function divisionQuotientDigitsArePositive(steps) {
+      return steps
+        .filter((step) => step.type === 'quotient')
+        .every((step) => step.quotientDigit > 0);
+    }
+
+    function chooseEasyDivisionProblem() {
+      const divisor = randomInt(2, 9);
+      const maxDigitQuotient = Math.max(1, Math.floor(9 / divisor));
+      const digitCount = randomInt(2, 3);
+      let text = '';
+      for (let i = 0; i < digitCount; i++) {
+        text += String(divisor * randomInt(1, maxDigitQuotient));
+      }
+      const dividend = Number(text);
+      return { dividend, divisor, steps: makeShortDivisionSteps(dividend, divisor) };
+    }
+
+    function chooseCarryingDivisionProblem() {
+      let candidate = null;
+      for (let tries = 0; tries < 160; tries++) {
+        const divisor = randomInt(2, 9);
+        const dividend = randomInt(12, 999);
+        if (dividend % divisor !== 0) continue;
+        const steps = makeShortDivisionSteps(dividend, divisor);
+        candidate = { dividend, divisor, steps };
+        if (divisionHasCarry(steps) && divisionQuotientDigitsArePositive(steps)) return candidate;
+      }
+      const dividend = 156;
+      const divisor = 4;
+      return { dividend, divisor, steps: makeShortDivisionSteps(dividend, divisor) };
+    }
+
+    function chooseRemainderDivisionProblem() {
+      let candidate = null;
+      for (let tries = 0; tries < 160; tries++) {
+        const divisor = randomInt(2, 9);
+        const dividend = randomInt(101, 999);
+        if (dividend % divisor === 0) continue;
+        const steps = makeShortDivisionSteps(dividend, divisor);
+        candidate = { dividend, divisor, steps };
+        if (divisionHasCarry(steps) && divisionQuotientDigitsArePositive(steps)) return candidate;
+      }
+      const dividend = 347;
+      const divisor = 6;
+      return { dividend, divisor, steps: makeShortDivisionSteps(dividend, divisor) };
+    }
+
+    function chooseChallengeDivisionProblem() {
+      let candidate = null;
+      for (let tries = 0; tries < 240; tries++) {
+        const divisor = randomInt(2, 9);
+        const quotient = randomInt(101, 999);
+        if (!String(quotient).includes('0')) continue;
+        const dividend = quotient * divisor;
+        if (dividend < 1000 || dividend > 9999) continue;
+        const steps = makeShortDivisionSteps(dividend, divisor);
+        candidate = { dividend, divisor, steps };
+        if (divisionHasCarry(steps) && divisionHasZeroInAnswer(steps)) return candidate;
+      }
+      const dividend = 4204;
+      const divisor = 4;
+      return { dividend, divisor, steps: makeShortDivisionSteps(dividend, divisor) };
+    }
+
+    function chooseDivideProblem() {
+      if (divideState.level === 'easy') return chooseEasyDivisionProblem();
+      if (divideState.level === 'carry') return chooseCarryingDivisionProblem();
+      if (divideState.level === 'remainder') return chooseRemainderDivisionProblem();
+      return chooseChallengeDivisionProblem();
+    }
+
+    function selectedDivideLevel() {
+      return document.querySelector('input[name="divideLevel"]:checked')?.value || 'easy';
+    }
+
+    function refreshDivideLevelCards() {
+      const selected = selectedDivideLevel();
+      document.querySelectorAll('.divide-level-card').forEach((card) => {
+        const on = card.querySelector('input')?.value === selected;
+        card.classList.toggle('border-violet-500', on);
+        card.classList.toggle('ring-2', on);
+        card.classList.toggle('ring-violet-200', on);
+        card.classList.toggle('border-violet-200', !on);
+      });
+    }
+
+    function buildDividePad() {
+      const host = $('#dividePad');
+      if (!host) return;
+      host.innerHTML = '';
+      ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'clear', '0', 'back'].forEach((value) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.dataset.divideKey = value;
+        btn.className =
+          'tap flex h-9 items-center justify-center rounded-lg border border-violet-200 bg-white text-sm font-bold text-violet-900 shadow-sm hover:bg-violet-50';
+        btn.textContent = value === 'clear' ? 'C' : value === 'back' ? '⌫' : value;
+        btn.setAttribute('aria-label', value === 'clear' ? 'Clear answer' : value === 'back' ? 'Delete last digit' : value);
+        host.appendChild(btn);
+      });
+    }
+
+    function updateDivideAnswerDisplay() {
+      const el = $('#divideAnswerDisplay');
+      if (!el) return;
+      el.innerHTML = divideState.buffer
+        ? `<span>${divideState.buffer}</span>`
+        : '<span class="text-violet-300">?</span>';
+    }
+
+    function renderDivideCalculation(step = divideState.steps[divideState.stepIndex]) {
+      const host = $('#divideCalculation');
+      if (!host) return;
+      const activeQuotientCol = step?.type === 'quotient' ? step.quotientCol : -1;
+      const carryTargetCol = step?.type === 'carry' ? divideState.offset + step.toIndex : -1;
+      const quotientStartCol = 4 - String(divideState.quotientValue).length;
+
+      let html = '<div class="sd-working" aria-hidden="true">';
+      html += '<div class="sd-quotient-row"><div class="sd-cell"></div>';
+      for (let col = 0; col < 4; col++) {
+        const isAnswerCol = col >= quotientStartCol;
+        const cls = col === activeQuotientCol
+          ? 'sd-answer-target'
+          : isAnswerCol
+            ? 'sd-answer-box'
+            : '';
+        html += `<div class="sd-cell ${cls}">${divideState.quotient[col] || ''}</div>`;
+      }
+      html += '</div>';
+
+      html += '<div class="sd-bus-row">';
+      html += `<div class="sd-divisor${step?.type === 'quotient' ? ' is-active' : ''}">${divideState.divisor}</div>`;
+      html += '<div class="sd-dividend-grid">';
+      for (let col = 0; col < 4; col++) {
+        const digitIndex = col - divideState.offset;
+        const digit = digitIndex >= 0 && digitIndex < divideState.digits.length ? divideState.digits[digitIndex] : '';
+        const activeDigit =
+          step?.type === 'quotient' && digitIndex >= step.sourceStart && digitIndex <= step.sourceEnd;
+        const cls = activeDigit
+          ? 'sd-active-digit'
+          : col === carryTargetCol
+            ? 'sd-carry-target'
+            : '';
+        const carry = divideState.carryMarks[col]
+          ? `<span class="sd-carry-mark">${divideState.carryMarks[col]}</span>`
+          : '';
+        html += `<div class="sd-digit-cell ${cls}">${carry}<span>${digit}</span></div>`;
+      }
+      html += '</div></div>';
+
+      if (step?.type === 'carry' && !divideState.awaitingNext) {
+        html += '<div class="sd-carry-arrow">CARRY WHAT IS LEFT TO THE NEXT DIGIT →</div>';
+      }
+      if (divideState.finalRemainder || step?.type === 'final-remainder') {
+        const shown = divideState.finalRemainder || '?';
+        html += `<div class="sd-final-remainder">Remainder: ${shown}</div>`;
+      }
+      html += '</div>';
+      host.innerHTML = html;
+    }
+
+    function startDivideProblem() {
+      divideState.level = selectedDivideLevel();
+      const chosen = chooseDivideProblem();
+      divideState.dividend = chosen.dividend;
+      divideState.divisor = chosen.divisor;
+      divideState.quotientValue = Math.floor(chosen.dividend / chosen.divisor);
+      divideState.remainderValue = chosen.dividend % chosen.divisor;
+      divideState.context = DIVIDE_CONTEXTS[randomInt(0, DIVIDE_CONTEXTS.length - 1)];
+      divideState.digits = String(chosen.dividend).split('');
+      divideState.offset = 4 - divideState.digits.length;
+      divideState.steps = chosen.steps;
+      divideState.stepIndex = 0;
+      divideState.buffer = '';
+      divideState.awaitingNext = false;
+      divideState.quotient = ['', '', '', ''];
+      divideState.carryMarks = ['', '', '', ''];
+      divideState.finalRemainder = '';
+      divideState.earned = 0;
+      divideState.completed = false;
+
+      $('#divideLevelLabel').textContent = DIVIDE_LEVELS[divideState.level].label;
+      $('#divideProblem').textContent = divideState.context.problem(divideState.dividend, divideState.divisor);
+      showView('divide-run');
+      showDivideStep();
+    }
+
+    function showDivideStep() {
+      const step = divideState.steps[divideState.stepIndex];
+      divideState.buffer = '';
+      divideState.awaitingNext = false;
+      updateDivideAnswerDisplay();
+      $('#divideNextBtn').classList.add('hidden');
+      $('#divideCompleteActions').classList.add('hidden');
+      $('#divideAnswerArea').classList.remove('hidden');
+      $('#divideEquation').classList.remove('hidden');
+      $('#divideFeedback').classList.remove('hidden');
+      $('#divideFeedback').textContent = 'Use the number pad, then check your answer.';
+      $('#dividePointsEarned').textContent = divideState.earned ? `+${divideState.earned} points` : '';
+
+      const learningStepCount = divideState.steps.length - 1;
+      $('#divideStepCounter').textContent =
+        step.type === 'finish' ? 'Complete' : `Step ${divideState.stepIndex + 1} of ${learningStepCount}`;
+
+      if (step.type === 'quotient') {
+        const firstDigitTooSmall = step.sourceStart === 0 && step.sourceEnd === 1;
+        if (step.quotientDigit === 0) {
+          $('#divideInstruction').textContent = `${divideState.divisor} does not fit into ${step.chunk}. Which digit holds this place in the answer?`;
+        } else if (firstDigitTooSmall) {
+          $('#divideInstruction').textContent = `${divideState.divisor} will not fit into the first digit, so begin with ${step.chunk}. How many ${divideState.divisor}s are in ${step.chunk}?`;
+        } else {
+          $('#divideInstruction').textContent = `How many ${divideState.divisor}s are in ${step.chunk}?`;
+        }
+        $('#divideEquation').innerHTML =
+          `<span class="inline-block rounded-lg bg-orange-400 px-2 text-white">${step.chunk}</span>` +
+          ` ÷ <span class="inline-block rounded-lg bg-emerald-400 px-2 text-emerald-950">${divideState.divisor}</span> = ?`;
+      } else if (step.type === 'carry') {
+        $('#divideInstruction').textContent = 'What remainder must be carried to the next digit?';
+        $('#divideEquation').innerHTML =
+          `<span class="text-violet-600">Carry the amount left over to make the next number.</span>`;
+      } else if (step.type === 'final-remainder') {
+        $('#divideInstruction').textContent = 'What is the final remainder?';
+        $('#divideEquation').innerHTML = '<span class="text-violet-600">Write the amount left over.</span>';
+      } else {
+        finishDivideProblem();
+        return;
+      }
+      renderDivideCalculation(step);
+    }
+
+    function divideStepSuccessMessage(step) {
+      if (step.type === 'carry') {
+        return `Correct. Carry ${step.remainder} beside the next digit to make ${step.nextChunk}.`;
+      }
+      if (step.type === 'final-remainder') {
+        return `Correct. The final remainder is ${step.remainder}.`;
+      }
+      if (step.quotientDigit === 0) {
+        return 'Correct. Write 0 in the answer to hold this place.';
+      }
+      if (step.remainder > 0) {
+        return `Correct. Write ${step.quotientDigit} above the highlighted digit. Now work out what is left over.`;
+      }
+      return `Correct. Write ${step.quotientDigit} above the highlighted digit. Nothing is left over.`;
+    }
+
+    function commitDivideStep(step, revealed) {
+      if (step.type === 'quotient') {
+        divideState.quotient[step.quotientCol] = String(step.quotientDigit);
+      } else if (step.type === 'carry') {
+        divideState.carryMarks[divideState.offset + step.toIndex] = String(step.remainder);
+      } else if (step.type === 'final-remainder') {
+        divideState.finalRemainder = String(step.remainder);
+      }
+
+      if (!revealed) divideState.earned += 2;
+      divideState.awaitingNext = true;
+      $('#divideAnswerArea').classList.add('hidden');
+      $('#divideFeedback').textContent = (revealed ? 'Here it is. ' : '') + divideStepSuccessMessage(step);
+      $('#dividePointsEarned').textContent = divideState.earned ? `+${divideState.earned} points` : '';
+      $('#divideNextBtn').textContent =
+        divideState.steps[divideState.stepIndex + 1]?.type === 'finish' ? 'Finish problem' : 'Next step';
+      $('#divideNextBtn').classList.remove('hidden');
+      renderDivideCalculation(step);
+    }
+
+    function checkDivideAnswer(revealed = false) {
+      if (divideState.awaitingNext || divideState.completed) return;
+      const step = divideState.steps[divideState.stepIndex];
+      if (!step || step.type === 'finish') return;
+      const value = revealed ? step.expected : Number(divideState.buffer);
+      if (!revealed && divideState.buffer === '') {
+        $('#divideFeedback').textContent = 'Enter an answer first.';
+        return;
+      }
+      if (value !== step.expected) {
+        $('#divideFeedback').textContent =
+          step.type === 'quotient'
+            ? 'Not quite. Use your times-table facts and check the highlighted number.'
+            : 'Not quite. Work out what is left over and have another go.';
+        $('#divideAnswerDisplay').classList.add('border-rose-300', 'bg-rose-50');
+        setTimeout(() => $('#divideAnswerDisplay')?.classList.remove('border-rose-300', 'bg-rose-50'), 450);
+        return;
+      }
+      divideState.buffer = String(step.expected);
+      updateDivideAnswerDisplay();
+      commitDivideStep(step, revealed);
+    }
+
+    function finishDivideProblem() {
+      if (divideState.completed) return;
+      divideState.completed = true;
+      addLifetimePracticePoints(divideState.earned);
+      $('#divideInstruction').textContent = 'You completed the whole short-division calculation!';
+      $('#divideEquation').classList.add('hidden');
+      $('#divideAnswerArea').classList.add('hidden');
+      $('#divideFeedback').classList.add('hidden');
+      $('#divideNextBtn').classList.add('hidden');
+      $('#divideAnswerSentence').textContent = divideState.context.answer(
+        divideState.quotientValue,
+        divideState.remainderValue
+      );
+      $('#divideCompleteActions').classList.remove('hidden');
+      $('#dividePointsEarned').textContent = `+${divideState.earned} points`;
+      renderDivideCalculation({ type: 'finish' });
+      if (window.confetti) {
+        window.confetti({ particleCount: 70, spread: 65, origin: { y: 0.72 }, colors: ['#7c3aed', '#34d399', '#fb923c'] });
+      }
+    }
+
     // ---------- Test queue ----------
     let testRangeSelectsWired = false;
     let practiceRangeSelectsWired = false;
@@ -3478,6 +4148,7 @@
       const viewPrac =
         views['practice-run'] && views['practice-run'].classList.contains('active');
       const viewColumn = views['column-run'] && views['column-run'].classList.contains('active');
+      const viewDivide = views['divide-run'] && views['divide-run'].classList.contains('active');
       if (viewTest && !testAwaitingNext && testIndex < testQueue.length) {
         if (/^[0-9]$/.test(e.key)) {
           e.preventDefault();
@@ -3520,6 +4191,22 @@
         if (e.key === 'Enter') {
           e.preventDefault();
           checkColumnAnswer(false);
+        }
+      }
+      if (viewDivide && !divideState.awaitingNext && !divideState.completed) {
+        if (/^[0-9]$/.test(e.key)) {
+          e.preventDefault();
+          divideState.buffer = (divideState.buffer + e.key).slice(0, 2);
+          updateDivideAnswerDisplay();
+        }
+        if (e.key === 'Backspace') {
+          e.preventDefault();
+          divideState.buffer = divideState.buffer.slice(0, -1);
+          updateDivideAnswerDisplay();
+        }
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          checkDivideAnswer(false);
         }
       }
     });
@@ -3572,12 +4259,14 @@
       buildPad('#pad-test', 'test', { compact: true });
       buildPad('#pad-practice', 'practice', { compact: true, practiceLarge: true });
       buildColumnPad();
+      buildDividePad();
       wirePad('#pad-test', 'test');
       wirePad('#pad-practice', 'practice');
 
       $('#homeBtnTest').addEventListener('click', () => showView('test-setup'));
       $('#homeBtnPractice').addEventListener('click', () => openPracticeView());
       $('#homeBtnColumn').addEventListener('click', () => showView('column-setup'));
+      $('#homeBtnDivide').addEventListener('click', () => showView('divide-setup'));
 
       $$('input[name="columnLevel"]').forEach((r) => r.addEventListener('change', refreshColumnLevelCards));
       $('#startColumnBtn').addEventListener('click', startColumnProblem);
@@ -3601,12 +4290,35 @@
         updateColumnAnswerDisplay();
       });
 
+      $$('input[name="divideLevel"]').forEach((r) => r.addEventListener('change', refreshDivideLevelCards));
+      $('#startDivideBtn').addEventListener('click', startDivideProblem);
+      $('#divideChangeLevelBtn').addEventListener('click', () => showView('divide-setup'));
+      $('#divideAnotherBtn').addEventListener('click', startDivideProblem);
+      $('#divideHomeBtn').addEventListener('click', () => showView('home'));
+      $('#divideCheckBtn').addEventListener('click', () => checkDivideAnswer(false));
+      $('#divideShowBtn').addEventListener('click', () => checkDivideAnswer(true));
+      $('#divideNextBtn').addEventListener('click', () => {
+        if (!divideState.awaitingNext) return;
+        divideState.stepIndex++;
+        showDivideStep();
+      });
+      $('#dividePad').addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-divide-key]');
+        if (!btn || divideState.awaitingNext || divideState.completed) return;
+        const key = btn.dataset.divideKey;
+        if (key === 'clear') divideState.buffer = '';
+        else if (key === 'back') divideState.buffer = divideState.buffer.slice(0, -1);
+        else divideState.buffer = (divideState.buffer + key).slice(0, 2);
+        updateDivideAnswerDisplay();
+      });
+
       $$('.nav-btn').forEach((btn) => {
         btn.addEventListener('click', () => {
           const nav = btn.getAttribute('data-nav');
           if (nav === 'home') showView('home');
           else if (nav === 'test-setup') showView('test-setup');
           else if (nav === 'column-setup') showView('column-setup');
+          else if (nav === 'divide-setup') showView('divide-setup');
           else if (nav === 'grid') {
             gridMapView = 'classic';
             openGridView();
