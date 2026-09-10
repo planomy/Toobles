@@ -543,6 +543,17 @@
               </span>
             </button>
           </div>
+          <button
+            type="button"
+            id="navSaveProgressBtn"
+            class="nav-btn mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold hover:bg-white/20"
+            title="Download or restore your Toobles progress"
+          >
+            <span class="nav-ico flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-400/90 text-violet-950 shadow-inner ring-1 ring-white/30" aria-hidden="true">
+              <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </span>
+            <span class="leading-tight">Save progress</span>
+          </button>
         </nav>
       </div>
       <p class="hidden md:block text-xs text-violet-200 mt-auto pt-4">Mastering your tables unlocks greater future mathematical ability.</p>
@@ -578,6 +589,19 @@
             <div class="flex shrink-0 flex-col items-end text-right" aria-live="polite">
               <span class="text-[10px] font-bold uppercase tracking-wider text-violet-200/90">Points</span>
               <span id="homeLifetimePoints" class="text-4xl font-black tabular-nums leading-none text-white drop-shadow-sm sm:text-5xl">0</span>
+            </div>
+          </div>
+          <div
+            id="backupNudge"
+            class="mt-3 hidden items-center justify-between gap-2 rounded-xl bg-amber-300/95 px-3 py-2 text-violet-950 shadow-md"
+            role="status"
+          >
+            <p class="min-w-0 text-left text-xs font-bold leading-snug sm:text-sm">
+              Keep your map safe — computers update and wipe browser saves.
+            </p>
+            <div class="flex shrink-0 gap-1.5">
+              <button type="button" id="backupNudgeSaveBtn" class="rounded-lg bg-violet-700 px-2.5 py-1.5 text-xs font-bold text-white hover:bg-violet-800">Save now</button>
+              <button type="button" id="backupNudgeDismissBtn" class="rounded-lg bg-white/70 px-2 py-1.5 text-xs font-bold text-violet-800 hover:bg-white">Later</button>
             </div>
           </div>
         </div>
@@ -1024,7 +1048,7 @@
       <!-- Test: results -->
       <section id="view-test-results" class="view min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <h2 class="text-2xl font-bold text-violet-900 mb-2">Your times-table map</h2>
-        <p class="text-violet-600 text-sm mb-4">This map is saved on your device. <span class="inline-flex items-center gap-1"><span class="inline-block h-3 w-3 rounded bg-emerald-400"></span> green</span> = correct, <span class="inline-flex items-center gap-1"><span class="inline-block h-3 w-3 rounded bg-rose-400"></span> red</span> = needs work, plain = not tested yet.</p>
+        <p class="text-violet-600 text-sm mb-4">Saved in this browser — use <strong>Save progress</strong> in the sidebar so updates don’t wipe it. <span class="inline-flex items-center gap-1"><span class="inline-block h-3 w-3 rounded bg-emerald-400"></span> green</span> = correct, <span class="inline-flex items-center gap-1"><span class="inline-block h-3 w-3 rounded bg-rose-400"></span> red</span> = needs work, plain = not tested yet.</p>
 
         <div class="mb-8 overflow-x-auto rounded-2xl border border-violet-100 bg-violet-50/50 p-3 shadow-inner">
           <div id="resultsGridHost" class="min-w-[340px] sm:min-w-[420px] md:min-w-0"></div>
@@ -1056,7 +1080,7 @@
       <!-- Progress map (anytime) -->
       <section id="view-grid" class="view overflow-y-auto overscroll-contain">
         <h2 class="text-2xl font-bold text-violet-900 mb-2">My times-table map</h2>
-        <p class="text-violet-600 text-sm mb-3">Saved on this device. <span class="inline-flex items-center gap-1"><span class="inline-block h-3 w-3 rounded bg-emerald-400"></span> green</span> = correct on a test, <span class="inline-flex items-center gap-1"><span class="inline-block h-3 w-3 rounded bg-rose-400"></span> red</span> = needs work, plain = not tested yet.</p>
+        <p class="text-violet-600 text-sm mb-3">Saved in this browser — tap <strong>Save progress</strong> for a backup file. <span class="inline-flex items-center gap-1"><span class="inline-block h-3 w-3 rounded bg-emerald-400"></span> green</span> = correct on a test, <span class="inline-flex items-center gap-1"><span class="inline-block h-3 w-3 rounded bg-rose-400"></span> red</span> = needs work, plain = not tested yet.</p>
         <p id="gridSummaryCounts" class="text-sm font-semibold text-violet-800 mb-3 rounded-xl bg-violet-50 px-4 py-2 ring-1 ring-violet-100"></p>
 
         <div class="mb-3 flex flex-wrap gap-2" role="tablist" aria-label="Map view">
@@ -1327,6 +1351,46 @@
     </div>
   </div>
 
+  <!-- Save / restore progress -->
+  <div
+    id="progressBackupRoot"
+    class="fixed inset-0 z-[450] hidden items-center justify-center p-4"
+    aria-hidden="true"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="progressBackupTitle"
+  >
+    <div id="progressBackupBackdrop" class="absolute inset-0 bg-violet-950/70 backdrop-blur-sm"></div>
+    <div class="relative z-10 w-full max-w-md rounded-3xl border-2 border-violet-200 bg-white p-5 shadow-2xl sm:p-6">
+      <h2 id="progressBackupTitle" class="text-xl font-extrabold text-violet-950 sm:text-2xl">Save your progress</h2>
+      <p class="mt-2 text-sm leading-relaxed text-violet-700">
+        Toobles keeps your map in this browser. If the computer updates or clears data, that can disappear.
+        Download a backup file you can restore anytime (email it to a parent, keep it in Downloads).
+      </p>
+      <p id="progressBackupStatus" class="mt-3 hidden rounded-xl bg-violet-50 px-3 py-2 text-sm font-semibold text-violet-800" aria-live="polite"></p>
+      <div class="mt-4 grid gap-2">
+        <button
+          type="button"
+          id="progressDownloadBtn"
+          class="tap w-full rounded-2xl bg-violet-600 py-3.5 text-base font-extrabold text-white shadow-lg hover:bg-violet-500"
+        >
+          Download my progress
+        </button>
+        <button
+          type="button"
+          id="progressRestoreBtn"
+          class="tap w-full rounded-2xl border-2 border-violet-300 bg-white py-3.5 text-base font-extrabold text-violet-800 hover:bg-violet-50"
+        >
+          Restore from a file
+        </button>
+        <input id="progressRestoreFile" type="file" accept=".json,application/json" class="hidden" />
+      </div>
+      <button type="button" id="progressBackupCloseBtn" class="mt-4 w-full rounded-xl py-2 text-sm font-bold text-violet-600 hover:bg-violet-50">
+        Close
+      </button>
+    </div>
+  </div>
+
   <script>
     const LS_NAME = 'tooblesName';
     const LS_STILL = 'tooblesStillLearning';
@@ -1336,6 +1400,9 @@
     const LS_STATS = 'tooblesStats';
     /** Per fact (canonical factKey): struggle weights for smarter test/practice order */
     const LS_FACT_STATS = 'tooblesFactStats';
+    const LS_BACKUP_AT = 'tooblesLastBackupAt';
+    const LS_BACKUP_NUDGE_DISMISS = 'tooblesBackupNudgeDismiss';
+    const PROGRESS_LS_KEYS = [LS_NAME, LS_STILL, LS_GOT, LS_GRID, LS_BADGES, LS_STATS, LS_FACT_STATS];
 
     const $ = (s, el = document) => el.querySelector(s);
     const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -1368,6 +1435,183 @@
       } catch (e) {
         el.value = '';
       }
+    }
+
+    function readLs(key) {
+      try {
+        return localStorage.getItem(key);
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function writeLs(key, value) {
+      try {
+        if (value == null) localStorage.removeItem(key);
+        else localStorage.setItem(key, value);
+      } catch (e) {
+        /* ignore */
+      }
+    }
+
+    function hasMeaningfulProgress() {
+      try {
+        const grid = JSON.parse(readLs(LS_GRID) || '{}');
+        if (grid && Object.keys(grid).length > 0) return true;
+        const still = JSON.parse(readLs(LS_STILL) || '[]');
+        const got = JSON.parse(readLs(LS_GOT) || '[]');
+        if ((still && still.length) || (got && got.length)) return true;
+        const badges = JSON.parse(readLs(LS_BADGES) || '[]');
+        if (badges && badges.length) return true;
+        const stats = JSON.parse(readLs(LS_STATS) || '{}');
+        if (stats && (stats.testsCompleted || stats.lifetimePoints || stats.practiceRounds)) return true;
+      } catch (e) {
+        /* ignore */
+      }
+      return false;
+    }
+
+    function collectProgressPayload() {
+      const data = {};
+      PROGRESS_LS_KEYS.forEach((key) => {
+        const v = readLs(key);
+        if (v != null) data[key] = v;
+      });
+      return {
+        v: 1,
+        app: 'toobles',
+        savedAt: new Date().toISOString(),
+        data,
+      };
+    }
+
+    function setBackupStatus(msg, kind) {
+      const el = $('#progressBackupStatus');
+      if (!el) return;
+      el.textContent = msg || '';
+      el.classList.toggle('hidden', !msg);
+      el.classList.toggle('bg-emerald-50', kind === 'ok');
+      el.classList.toggle('text-emerald-800', kind === 'ok');
+      el.classList.toggle('bg-rose-50', kind === 'err');
+      el.classList.toggle('text-rose-800', kind === 'err');
+      el.classList.toggle('bg-violet-50', !kind || kind === 'info');
+      el.classList.toggle('text-violet-800', !kind || kind === 'info');
+    }
+
+    function openProgressBackupDialog() {
+      const root = $('#progressBackupRoot');
+      if (!root) return;
+      setBackupStatus('');
+      const at = readLs(LS_BACKUP_AT);
+      if (at) {
+        try {
+          const d = new Date(at);
+          setBackupStatus(`Last backup: ${d.toLocaleString()}`, 'info');
+        } catch (e) {
+          /* ignore */
+        }
+      }
+      root.classList.remove('hidden');
+      root.classList.add('flex');
+      root.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeProgressBackupDialog() {
+      const root = $('#progressBackupRoot');
+      if (!root) return;
+      root.classList.add('hidden');
+      root.classList.remove('flex');
+      root.setAttribute('aria-hidden', 'true');
+    }
+
+    function downloadProgressBackup() {
+      persistPlayerName();
+      saveGrid();
+      saveEarnedBadges();
+      saveFactStats();
+      const payload = collectProgressPayload();
+      const name =
+        (($('#playerName') && $('#playerName').value.trim()) || 'player')
+          .replace(/[^\w\- ]+/g, '')
+          .replace(/\s+/g, '_')
+          .slice(0, 24) || 'player';
+      const stamp = new Date().toISOString().slice(0, 10);
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `toobles-${name}-${stamp}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      writeLs(LS_BACKUP_AT, payload.savedAt);
+      writeLs(LS_BACKUP_NUDGE_DISMISS, '');
+      setBackupStatus('Downloaded! Keep that file safe, then Restore if you ever lose your map.', 'ok');
+      refreshBackupNudge();
+    }
+
+    function applyProgressPayload(payload) {
+      if (!payload || payload.app !== 'toobles' || payload.v !== 1 || !payload.data || typeof payload.data !== 'object') {
+        throw new Error('Not a Toobles progress file.');
+      }
+      PROGRESS_LS_KEYS.forEach((key) => {
+        if (Object.prototype.hasOwnProperty.call(payload.data, key)) {
+          writeLs(key, payload.data[key]);
+        }
+      });
+      loadFactStats();
+      loadSets();
+      loadEarnedBadges();
+      evaluateGridBadges();
+      loadPlayerNameIntoField();
+      updateHomeCounts();
+      updateHomeStreakPanel();
+      updateGeniusTabButtons();
+      refreshHomeLifetimePoints(false);
+      writeLs(LS_BACKUP_AT, new Date().toISOString());
+      writeLs(LS_BACKUP_NUDGE_DISMISS, '');
+      refreshBackupNudge();
+    }
+
+    function restoreProgressFromFile(file) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const payload = JSON.parse(String(reader.result || ''));
+          applyProgressPayload(payload);
+          setBackupStatus('Restored! Your map, badges, and points are back.', 'ok');
+          showView('home');
+        } catch (err) {
+          setBackupStatus(err && err.message ? err.message : 'Could not read that file.', 'err');
+        }
+      };
+      reader.onerror = () => setBackupStatus('Could not read that file.', 'err');
+      reader.readAsText(file);
+    }
+
+    function shouldShowBackupNudge() {
+      if (!hasMeaningfulProgress()) return false;
+      const dismissed = readLs(LS_BACKUP_NUDGE_DISMISS);
+      if (dismissed) {
+        const t = Number(dismissed);
+        if (Number.isFinite(t) && Date.now() - t < 3 * 24 * 60 * 60 * 1000) return false;
+      }
+      const at = readLs(LS_BACKUP_AT);
+      if (!at) return true;
+      try {
+        const age = Date.now() - new Date(at).getTime();
+        return age > 7 * 24 * 60 * 60 * 1000;
+      } catch (e) {
+        return true;
+      }
+    }
+
+    function refreshBackupNudge() {
+      const el = $('#backupNudge');
+      if (!el) return;
+      const show = shouldShowBackupNudge();
+      el.classList.toggle('hidden', !show);
+      el.classList.toggle('flex', show);
     }
 
     /** Correct answers this fast in one test count toward Speedster */
@@ -2158,6 +2402,7 @@
         updateHomeStreakPanel();
         updateHomeCounts();
         refreshHomeLifetimePoints(true);
+        refreshBackupNudge();
       }
       if (name === 'test-setup') refreshTestRangeSelectOptions();
       if (name === 'practice-setup') refreshPracticeRangeSelectOptions();
@@ -4243,6 +4488,7 @@
       });
 
       refreshHomeLifetimePoints(false);
+      refreshBackupNudge();
 
       initRangeSelects();
       initPracticeRangeSelects();
@@ -4354,6 +4600,23 @@
 
       $('#badgeCeremonyDismiss').addEventListener('click', dismissBadgeCeremony);
       $('#badgeCeremonyBackdrop').addEventListener('click', dismissBadgeCeremony);
+
+      const saveNav = $('#navSaveProgressBtn');
+      if (saveNav) saveNav.addEventListener('click', openProgressBackupDialog);
+      $('#progressBackupBackdrop')?.addEventListener('click', closeProgressBackupDialog);
+      $('#progressBackupCloseBtn')?.addEventListener('click', closeProgressBackupDialog);
+      $('#progressDownloadBtn')?.addEventListener('click', downloadProgressBackup);
+      $('#progressRestoreBtn')?.addEventListener('click', () => $('#progressRestoreFile')?.click());
+      $('#progressRestoreFile')?.addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        restoreProgressFromFile(file);
+        e.target.value = '';
+      });
+      $('#backupNudgeSaveBtn')?.addEventListener('click', openProgressBackupDialog);
+      $('#backupNudgeDismissBtn')?.addEventListener('click', () => {
+        writeLs(LS_BACKUP_NUDGE_DISMISS, String(Date.now()));
+        refreshBackupNudge();
+      });
 
       showView('home');
 
