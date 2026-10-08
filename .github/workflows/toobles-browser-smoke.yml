@@ -1,0 +1,76 @@
+name: Toobles browser smoke test
+on:
+  push:
+    branches:
+      - fix/toobles-enter-tested-20261008
+  workflow_dispatch:
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser test dependency
+        run: |
+          npm install --no-save playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Exercise Toobles buttons in Chromium
+        run: |
+          node <<'JS'
+          const { chromium } = require('playwright');
+          const assert = require('node:assert/strict');
+          (async () => {
+            const browser = await chromium.launch({headless:true});
+            const page = await browser.newPage({viewport:{width:1280,height:900}});
+            const errs = [];
+            page.on('pageerror',e=>errs.push(e.message));
+            await page.goto('file://' + process.cwd() + '/index.html',{waitUntil:'domcontentloaded',timeout:45000});
+            await page.waitForTimeout(600);
+            assert.equal(await page.locator('#view-home').evaluate(el=>el.classList.contains('active')),true,'Home must initialise');
+            await page.locator('#homeBtnTest').click();
+            console.log('DIAGNOSTICS',JSON.stringify({errors:errs,active:await page.locator('section.view.active').evaluateAll(xs=>xs.map(x=>x.id)),testButton:await page.locator('#homeBtnTest').count()}));
+            assert.equal(await page.locator('#view-test-setup').evaluate(el=>el.classList.contains('active')),true,'Test button must open setup');
+            await page.locator('#testAnswerConfirmSwitch').check();
+            assert.equal(await page.locator('#testAnswerConfirmSwitch').isChecked(),true);
+            assert.equal(await page.locator('#practiceAnswerConfirmSwitch').isChecked(),true,'Preference shared between modes');
+            await page.evaluate(()=>{testQueue=[{a:7,b:8}];testIndex=0;testFastMs=0;testSessionEndPerf=null;showView('test-run');showTestQuestion();});
+            await page.locator('#pad-test button[data-digit="5"]').click();
+            await page.locator('#pad-test button[data-digit="6"]').click();
+            assert.equal(await page.locator('#testAnswerPreview').innerText(),'56','Visible answer should show entered digits');
+            assert.equal(await page.evaluate(()=>testIndex),0,'Confirm mode must not auto-submit');
+            await page.locator('#pad-test button[data-pad-action="back"]').click();
+            assert.equal(await page.locator('#testAnswerPreview').innerText(),'5');
+            await page.locator('#pad-test button[data-digit="6"]').click();
+            await page.locator('#pad-test button[data-pad-action="enter"]').click();
+            await page.waitForTimeout(250);
+            assert.equal(await page.evaluate(()=>testIndex),1,'Enter must submit Test');
+            await page.evaluate(()=>{document.querySelector('#badgeCeremonyRoot')?.classList.add('hidden');});
+            await page.locator('#resultsPracticeBtn').click();
+            assert.equal(await page.locator('#view-practice-setup').evaluate(el=>el.classList.contains('active')),true);
+            await page.evaluate(()=>{practiceState.running=true;practiceState.current={a:7,b:8,answer:56};practiceState.buffer='';showView('practice-run');});
+            await page.locator('#pad-practice button[data-digit="5"]').click();
+            await page.locator('#pad-practice button[data-digit="6"]').click();
+            assert.equal(await page.locator('#practiceAnswerPreview').innerText(),'56','Practice answer should be visible');
+            assert.equal(await page.evaluate(()=>practiceState.buffer),'56');
+            await page.keyboard.press('Backspace');
+            assert.equal(await page.locator('#practiceAnswerPreview').innerText(),'5');
+            await page.keyboard.press('6');
+            await page.keyboard.press('Enter');
+            assert.equal(await page.evaluate(()=>practiceState.current),null,'Keyboard Enter should submit Practice');
+            await page.evaluate(()=>{practiceState.running=false;showView('test-setup');});
+            await page.locator('#testAnswerConfirmSwitch').uncheck();
+            await page.evaluate(()=>{testQueue=[{a:7,b:8}];testIndex=0;testFastMs=0;testSessionEndPerf=null;showView('test-run');showTestQuestion();});
+            await page.locator('#pad-test button[data-digit="5"]').click();
+            await page.locator('#pad-test button[data-digit="6"]').click();
+            await page.waitForTimeout(250);
+            assert.equal(await page.evaluate(()=>testIndex),1,'Original instant-answer mode should still work');
+            await page.reload({waitUntil:'domcontentloaded'});
+            assert.equal(await page.locator('#testAnswerConfirmSwitch').isChecked(),false,'Setting persists');
+            assert.deepEqual(errs,[],'No uncaught JavaScript exceptions');
+            console.log('PASS: Home, Test, Practice, preview, backspace, Enter, instant answer, toggle persistence, no JS errors');
+            await browser.close();
+          })().catch(e=>{console.error(e);process.exit(1);});
+          JS
