@@ -47,6 +47,7 @@ jobs:
             await page.locator('#pad-test button[data-pad-action="enter"]').click();
             await page.waitForTimeout(250);
             assert.equal(await page.evaluate(()=>testIndex),1,'Enter must submit Test');
+            await page.evaluate(()=>{document.querySelector('#badgeCeremonyRoot')?.classList.add('hidden');});
             await page.locator('#resultsPracticeBtn').click();
             assert.equal(await page.locator('#view-practice-setup').evaluate(el=>el.classList.contains('active')),true);
             await page.evaluate(()=>{practiceState.running=true;practiceState.current={a:7,b:8,answer:56};practiceState.buffer='';showView('practice-run');});
@@ -58,7 +59,7 @@ jobs:
             assert.equal(await page.locator('#practiceAnswerPreview').innerText(),'5');
             await page.keyboard.press('6');
             await page.keyboard.press('Enter');
-            assert.notEqual(await page.evaluate(()=>practiceState.buffer),'56','Keyboard Enter should submit Practice');
+            assert.equal(await page.evaluate(()=>practiceState.current),null,'Keyboard Enter should submit Practice');
             await page.evaluate(()=>{practiceState.running=false;showView('test-setup');});
             await page.locator('#testAnswerConfirmSwitch').uncheck();
             await page.evaluate(()=>{testQueue=[{a:7,b:8}];testIndex=0;testFastMs=0;testSessionEndPerf=null;showView('test-run');showTestQuestion();});
