@@ -31,6 +31,7 @@ jobs:
             await page.waitForTimeout(600);
             assert.equal(await page.locator('#view-home').evaluate(el=>el.classList.contains('active')),true,'Home must initialise');
             await page.locator('#homeBtnTest').click();
+            console.log('DIAGNOSTICS',JSON.stringify({errors:errs,active:await page.locator('section.view.active').evaluateAll(xs=>xs.map(x=>x.id)),testButton:await page.locator('#homeBtnTest').count()}));
             assert.equal(await page.locator('#view-test-setup').evaluate(el=>el.classList.contains('active')),true,'Test button must open setup');
             await page.locator('#testAnswerConfirmSwitch').check();
             assert.equal(await page.locator('#testAnswerConfirmSwitch').isChecked(),true);
