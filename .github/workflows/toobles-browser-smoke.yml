@@ -2,7 +2,7 @@ name: Toobles browser smoke test
 on:
   push:
     branches:
-      - fix/toobles-enter-tested-20261008
+      - fix/toobles-visible-toggle-in-run-20261008
   workflow_dispatch:
 jobs:
   browser:
@@ -33,10 +33,14 @@ jobs:
             await page.locator('#homeBtnTest').click();
             console.log('DIAGNOSTICS',JSON.stringify({errors:errs,active:await page.locator('section.view.active').evaluateAll(xs=>xs.map(x=>x.id)),testButton:await page.locator('#homeBtnTest').count()}));
             assert.equal(await page.locator('#view-test-setup').evaluate(el=>el.classList.contains('active')),true,'Test button must open setup');
-            await page.locator('#testAnswerConfirmSwitch').check();
-            assert.equal(await page.locator('#testAnswerConfirmSwitch').isChecked(),true);
-            assert.equal(await page.locator('#practiceAnswerConfirmSwitch').isChecked(),true,'Preference shared between modes');
+            assert.equal(await page.locator('#testAnswerConfirmSwitch').isChecked(),false,'Starts in quick mode');
             await page.evaluate(()=>{testQueue=[{a:7,b:8}];testIndex=0;testFastMs=0;testSessionEndPerf=null;showView('test-run');showTestQuestion();});
+            assert.equal(await page.locator('#testRunAnswerConfirmSwitch').isVisible(),true,'Run toggle should be visible');
+            await page.locator('#testRunAnswerConfirmSwitch').check();
+            assert.equal(await page.locator('#testAnswerConfirmSwitch').isChecked(),true,'Test setup setting syncs');
+            assert.equal(await page.locator('#practiceAnswerConfirmSwitch').isChecked(),true,'Practice setup setting syncs');
+            assert.equal(await page.locator('#testAnswerPreview').isVisible(),true,'Answer preview appears immediately');
+            assert.equal(await page.locator('#pad-test button[data-pad-action="enter"]').isVisible(),true,'Enter key appears');
             await page.locator('#pad-test button[data-digit="5"]').click();
             await page.locator('#pad-test button[data-digit="6"]').click();
             assert.equal(await page.locator('#testAnswerPreview').innerText(),'56','Visible answer should show entered digits');
@@ -51,6 +55,11 @@ jobs:
             await page.locator('#resultsPracticeBtn').click();
             assert.equal(await page.locator('#view-practice-setup').evaluate(el=>el.classList.contains('active')),true);
             await page.evaluate(()=>{practiceState.running=true;practiceState.current={a:7,b:8,answer:56};practiceState.buffer='';showView('practice-run');});
+            assert.equal(await page.locator('#practiceRunAnswerConfirmSwitch').isVisible(),true,'Practice toggle should be visible');
+            await page.locator('#practiceRunAnswerConfirmSwitch').uncheck();
+            assert.equal(await page.locator('#practiceAnswerPreview').isVisible(),false,'Can turn preview off during practice');
+            await page.locator('#practiceRunAnswerConfirmSwitch').check();
+            assert.equal(await page.locator('#practiceAnswerPreview').isVisible(),true,'Can turn preview on during practice');
             await page.locator('#pad-practice button[data-digit="5"]').click();
             await page.locator('#pad-practice button[data-digit="6"]').click();
             assert.equal(await page.locator('#practiceAnswerPreview').innerText(),'56','Practice answer should be visible');
@@ -62,6 +71,8 @@ jobs:
             assert.equal(await page.evaluate(()=>practiceState.current),null,'Keyboard Enter should submit Practice');
             await page.evaluate(()=>{practiceState.running=false;showView('test-setup');});
             await page.locator('#testAnswerConfirmSwitch').uncheck();
+            assert.equal(await page.locator('#testRunAnswerConfirmSwitch').isChecked(),false,'Run toggle tracks setup');
+            assert.equal(await page.locator('#pad-test button[data-pad-action="enter"]').count(),0,'Old keypad restored');
             await page.evaluate(()=>{testQueue=[{a:7,b:8}];testIndex=0;testFastMs=0;testSessionEndPerf=null;showView('test-run');showTestQuestion();});
             await page.locator('#pad-test button[data-digit="5"]').click();
             await page.locator('#pad-test button[data-digit="6"]').click();
